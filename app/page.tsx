@@ -1,21 +1,32 @@
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-slate-50 text-slate-900">
-      <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-md border border-slate-100 text-center space-y-6">
-        <div className="w-16 h-16 bg-ultracem-blue rounded-2xl flex items-center justify-center mx-auto shadow-inner text-white font-bold text-2xl">
+    <main className="flex min-h-screen flex-col items-center justify-center p-6">
+      <div className="card-uc max-w-md w-full space-y-6 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-uc-card bg-ultracem-blue text-2xl font-bold text-white">
           UC
         </div>
         <div className="space-y-2">
-          <h1 className="text-2xl font-extrabold tracking-tight text-ultracem-blue-dark">
-            UltraCem Chatbot Setup
-          </h1>
-          <p className="text-sm text-slate-500">
-            El entorno inicial ha sido configurado con éxito usando Bun, Next.js, Tailwind CSS y TypeScript.
+          <h1 className="text-h2 text-ultracem-blue">UltraCem Chatbot</h1>
+          <p className="text-body-sm text-ultracem-gray-600">
+            Tema Tailwind alineado con{" "}
+            <span className="font-medium text-ultracem-gray-900">foundations.md</span>
+            : Montserrat, azul corporativo y acentos amarillo/verde.
           </p>
         </div>
-        <div className="border-t border-slate-100 pt-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <div className="flex flex-wrap justify-center gap-3">
+          <button type="button" className="btn-primary">
+            Primario
+          </button>
+          <button type="button" className="btn-secondary">
+            Secundario
+          </button>
+          <button type="button" className="btn-outline">
+            Outline
+          </button>
+        </div>
+        <div className="border-t border-ultracem-gray-100 pt-6">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-ultracem-green/10 px-3 py-1.5 text-xs font-semibold text-ultracem-green">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-ultracem-green" />
             Listo para desarrollo
           </span>
         </div>
