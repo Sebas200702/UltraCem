@@ -9,7 +9,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "UltraCem | Calculadora de materiales",
+  title: "UltraCem | Calculadora de materiales con IA",
   description:
     "Asistente para calcular cemento, arena y materiales de construcción.",
 };
@@ -20,8 +20,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body className={`${montserrat.variable} font-sans`}>{children}</body>
+    <html lang="es" className="scroll-smooth">
+      <body
+        className={`${montserrat.variable} font-sans text-ultracem-gray-900 antialiased`}
+      >
+        {children}
+      </body>
     </html>
   );
 }
