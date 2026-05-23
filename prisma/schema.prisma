@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id          String   @id @default(uuid()) @db.Uuid
+  phone       String?  @unique @db.VarChar(20)
+  name        String?  @db.VarChar(255)
+  user_type   String?  @db.VarChar(50)
+  preferences Json     @default("{}")
+  created_at  DateTime @default(now()) @db.Timestamptz
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  conversations Conversation[]
+
+  @@map("users")
+}
+
+model Conversation {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String?  @db.Uuid
+  status     String   @default("active") @db.VarChar(20)
+  metadata   Json     @default("{}")
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  user         User?         @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  messages     Message[]
+  calculations Calculation[]
+
+  @@index([user_id])
+  @@index([status])
+  @@map("conversations")
+}
+
+model Message {
+  id              String   @id @default(uuid()) @db.Uuid
+  conversation_id String   @db.Uuid
+  role            String   @db.VarChar(20)
+  content         String
+  extracted_data  Json     @default("{}")
+  created_at      DateTime @default(now()) @db.Timestamptz
+
+  conversation Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+
+  @@index([conversation_id])
+  @@map("messages")
+}
+
+model Product {
+  id                String   @id @default(uuid()) @db.Uuid
+  sku               String   @unique @db.VarChar(50)
+  name              String   @db.VarChar(255)
+  category          String   @db.VarChar(50)
+  subcategory       String?  @db.VarChar(50)
+  technical_specs   Json     @default("{}")
+  price_per_bag_cop Decimal  @db.Decimal(10, 2)
+  co2_per_kg        Decimal  @default(0.900) @db.Decimal(5, 3)
+  datasheet_url     String?
+  is_active         Boolean  @default(true)
+  created_at        DateTime @default(now()) @db.Timestamptz
+  updated_at        DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  recommendations ProductRecommendation[]
+
+  @@index([category])
+  @@index([is_active])
+  @@map("products")
+}
+
+model Calculation {
+  id              String   @id @default(uuid()) @db.Uuid
+  conversation_id String   @db.Uuid
+  structure_type  String   @db.VarChar(20)
+  dimensions      Json
+  volume_m3       Decimal? @db.Decimal(10, 3)
+  materials       Json?
+  status          String   @default("pending") @db.VarChar(20)
+  created_at      DateTime @default(now()) @db.Timestamptz
+
+  conversation    Conversation          @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  recommendations ProductRecommendation[]
+
+  @@index([conversation_id])
+  @@map("calculations")
+}
+
+model ProductRecommendation {
+  id                 String   @id @default(uuid()) @db.Uuid
+  calculation_id     String   @db.Uuid
+  product_id         String   @db.Uuid
+  quantity_bags      Int
+  estimated_cost_cop Decimal  @db.Decimal(12, 2)
+  savings_cop        Decimal  @default(0) @db.Decimal(12, 2)
+  co2_saved_kg       Decimal  @default(0) @db.Decimal(8, 2)
+  justification      Json?
+  created_at         DateTime @default(now()) @db.Timestamptz
+
+  calculation Calculation @relation(fields: [calculation_id], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [product_id], references: [id], onDelete: Restrict)
+
+  @@index([calculation_id])
+  @@map("product_recommendations")
+}

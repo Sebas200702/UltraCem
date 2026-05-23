@@ -2,14 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
+/* foundations.md §3.4 — CSS variables alineadas con Tailwind */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 244, 246, 249;
-  --background-end-rgb: 255, 255, 255;
+  --uc-brand-primary: #003e78;
+  --uc-brand-primary-hover: #022443;
+  --uc-brand-yellow: #ffca00;
+  --uc-brand-yellow-bright: #ffda05;
+  --uc-brand-yellow-hover: #e8c204;
+  --uc-brand-green: #23a455;
+  --uc-text-primary: #393939;
+  --uc-text-secondary: #7a7a7a;
+  --uc-text-muted: #54595f;
+  --uc-surface: #ffffff;
+  --uc-surface-off: #fcfcfc;
+  --uc-surface-muted: #f9fafb;
+  --uc-surface-subtle: #f2f4f7;
+  --uc-border: #d0d5dd;
+  --uc-radius-button: 16px;
+  --uc-radius-card: 25px;
+  --uc-container-max: 1140px;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
-  min-height: 100vh;
+@layer base {
+  body {
+    @apply min-h-screen bg-ultracem-surface-muted font-sans text-ultracem-gray-900 antialiased;
+  }
+
+  h1 {
+    @apply text-h1 text-ultracem-gray-900;
+  }
+
+  h2 {
+    @apply text-h2 text-ultracem-gray-900;
+  }
+
+  h3 {
+    @apply text-h3 text-ultracem-gray-900;
+  }
+}
+
+@layer components {
+  /* foundations.md §6.1 — Botones */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-uc-button bg-ultracem-blue px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-ultracem-blue-dark focus:outline-none focus:ring-2 focus:ring-uc-focus focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-uc-button bg-ultracem-yellow px-6 py-3 text-sm font-semibold text-ultracem-blue transition-colors hover:bg-ultracem-yellow-hover focus:outline-none focus:ring-2 focus:ring-uc-focus focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-outline {
+    @apply inline-flex items-center justify-center rounded-uc-button border-2 border-ultracem-blue bg-transparent px-6 py-3 text-sm font-semibold text-ultracem-blue transition-colors hover:bg-ultracem-blue hover:text-white focus:outline-none focus:ring-2 focus:ring-uc-focus focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  /* foundations.md §6.2 — Inputs */
+  .input-uc {
+    @apply min-h-12 w-full rounded-uc-input border border-ultracem-border bg-ultracem-surface px-4 text-body text-ultracem-gray-900 placeholder:text-ultracem-gray-600 focus:border-ultracem-blue focus:outline-none focus:ring-2 focus:ring-uc-focus focus:ring-offset-1;
+  }
+
+  /* foundations.md §6.3 — Cards */
+  .card-uc {
+    @apply rounded-uc-card border border-ultracem-gray-100 bg-ultracem-surface p-6 shadow-uc-card;
+  }
+
+  /* foundations.md §6.4 — Chat bubbles */
+  .bubble-user {
+    @apply rounded-2xl rounded-br-sm bg-ultracem-blue px-4 py-3 text-body-sm text-white;
+  }
+
+  .bubble-assistant {
+    @apply rounded-2xl rounded-bl-sm border border-ultracem-gray-100 bg-ultracem-surface-subtle px-4 py-3 text-body-sm text-ultracem-gray-900;
+  }
+
+  .container-uc {
+    @apply mx-auto w-full max-w-uc-container px-4 md:px-6;
+  }
 }
