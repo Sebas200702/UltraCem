@@ -78,7 +78,7 @@ graph TB
 | **Next.js 14+ (App Router)** | Frontend + API Routes | Server Components for initial load performance, API routes for serverless functions, built-in SEO optimization |
 | **Supabase** | Database + Auth + Realtime | PostgreSQL for relational data, Row Level Security, realtime subscriptions for chat, generous free tier |
 | **Tailwind CSS** | Styling | Mobile-first utility classes, component variants, minimal bundle size |
-| **Gemini API (gemini-1.5-flash)** | NLP Engine | Fast response times (< 2s), strong Spanish language support, cost-effective for MVP, function calling for structured output |
+| **Gemini API (gemini-3.1-flash)** | NLP Engine | Fast response times (< 2s), strong Spanish language support, cost-effective for MVP, function calling for structured output |
 | **Zustand** | Client State | Lightweight (< 1kb), TypeScript-first, no boilerplate |
 
 ---
@@ -847,7 +847,7 @@ export class NLPService {
   constructor(apiKey: string) {
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-3.1-flash',
       generationConfig: {
         temperature: 0.3, // Lower temperature for more consistent outputs
         maxOutputTokens: 500,

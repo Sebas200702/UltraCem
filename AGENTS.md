@@ -122,7 +122,7 @@ src/app/
 ### 4. Gemini API Rules
 
 #### ✅ DO:
-- **Modelo:** `gemini-1.5-flash` para MVP (rápido y costo-eficiente).
+- **Modelo:** `gemini-3.1-flash` para MVP (rápido y costo-eficiente).
 - **Temperature baja (0.3)** para respuestas consistentes y JSON estable.
 - **Implementa reintentos con backoff** en integración de Gemini.
 - **Devuelve SIEMPRE JSON estructurado** para el NLP (según `docs/specs.md`).
