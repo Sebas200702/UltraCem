@@ -34,7 +34,7 @@ UltraCem Chatbot es una aplicación web progresiva (PWA) mobile-first que permit
 | **React** | 18.3 | UI |
 | **TypeScript** | 5.4 | Tipado estricto |
 | **Supabase** | 2.43 | Base de datos PostgreSQL, Auth, RLS |
-| **Gemini API** | 1.5 Flash | Motor de NLP |
+| **Gemini API** | 3.1 Flash | Motor de NLP |
 | **Tailwind CSS** | 3.4 | Estilos utility-first |
 | **Zustand** | — | Estado del cliente |
 | **Zod** | — | Validación de esquemas |
