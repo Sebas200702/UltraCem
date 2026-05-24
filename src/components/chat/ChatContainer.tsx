@@ -154,7 +154,7 @@ export function ChatContainer() {
             <Hammer className="h-5 w-5 text-ultracem-blue" />
           </div>
           <div>
-            <h1 className="font-display text-xl tracking-wide text-white">
+            <h1 className="text-xl font-semibold tracking-wide text-white">
               ULTRACEM
             </h1>
             <p className="text-[10px] font-medium uppercase tracking-widest text-ultracem-yellow">
@@ -177,7 +177,7 @@ export function ChatContainer() {
           <div className="flex h-full flex-col">
             <div
               ref={scrollRef}
-              className="flex-1 overflow-y-auto blueprint-grid-light px-4 py-6 md:px-6"
+              className="flex-1 overflow-y-auto bg-ultracem-surface-muted px-4 py-6 md:px-6"
             >
               <div className="mx-auto max-w-2xl space-y-5">
                 {displayMessages.map((msg, index) => (

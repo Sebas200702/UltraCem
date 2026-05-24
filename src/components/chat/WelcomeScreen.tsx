@@ -15,34 +15,19 @@ const FEATURES = [
 
 export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   return (
-    <div className="relative flex h-full flex-col items-center justify-center overflow-hidden blueprint-grid px-6">
-      {/* Noise texture overlay */}
-      <div className="noise-overlay pointer-events-none absolute inset-0" />
-
-      {/* Decorative diagonal lines */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div
-          className="absolute -right-20 -top-20 h-[500px] w-[2px] rotate-[35deg] bg-ultracem-yellow/20"
-          style={{ animation: "draw-line 1.5s ease-out forwards" }}
-        />
-        <div
-          className="absolute -left-10 top-1/3 h-[300px] w-[1px] rotate-[25deg] bg-white/10"
-          style={{ animation: "draw-line 1.8s ease-out 0.3s forwards" }}
-        />
-      </div>
-
+    <div className="relative flex h-full flex-col items-center justify-center overflow-hidden bg-ultracem-blue px-6">
       {/* Content */}
       <div className="relative z-10 flex w-full max-w-lg flex-col items-center text-center">
         {/* Logo mark */}
         <div className="mb-6 animate-fade-in-up">
-          <div className="corner-brackets mx-auto flex h-20 w-20 items-center justify-center border border-white/10 bg-ultracem-blue-dark/50 backdrop-blur-sm">
-            <span className="font-display text-4xl text-ultracem-yellow">UC</span>
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-uc-card border border-white/10 bg-ultracem-blue-dark/50">
+            <span className="text-4xl font-bold text-ultracem-yellow">UC</span>
           </div>
         </div>
 
         {/* Headline */}
         <div className="mb-2 animate-fade-in-up stagger-1">
-          <h2 className="font-display text-5xl leading-[0.95] tracking-wide text-white sm:text-6xl md:text-7xl">
+          <h2 className="text-5xl font-bold leading-tight tracking-wide text-white sm:text-6xl">
             CALCULA TUS
             <br />
             <span className="text-ultracem-yellow">MATERIALES</span>
@@ -75,7 +60,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           {FEATURES.map((feature) => (
             <div
               key={feature.label}
-              className="corner-brackets flex flex-col items-center gap-2 border border-white/10 bg-ultracem-blue-dark/30 p-3 backdrop-blur-sm"
+              className="flex flex-col items-center gap-2 rounded-lg border border-white/10 bg-ultracem-blue-dark/30 p-3"
             >
               <feature.icon className="h-5 w-5 text-ultracem-yellow" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-white">

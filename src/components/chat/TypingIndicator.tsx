@@ -5,7 +5,7 @@ export function TypingIndicator() {
     <div className="flex items-start gap-3">
       {/* Avatar */}
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-ultracem-blue">
-        <span className="font-display text-sm text-ultracem-yellow">UC</span>
+        <span className="text-body-sm font-bold text-ultracem-yellow">UC</span>
       </div>
 
       {/* Bubble */}
