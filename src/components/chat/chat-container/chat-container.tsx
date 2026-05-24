@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-import { UltraCemLogo } from "@/components/brand";
-import { CalculationResult } from "@/components/chat/calculation-result";
-import { InputBar } from "@/components/chat/input-bar";
-import { MessageBubble } from "@/components/chat/message-bubble";
-import { TypingIndicator } from "@/components/chat/typing-indicator";
-import { WelcomeScreen } from "@/components/chat/welcome-screen";
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
+import { UltraCemLogo } from '@/components/brand';
+import { CalculationResult } from '@/components/chat/calculation-result';
+import { InputBar } from '@/components/chat/input-bar';
+import { MessageBubble } from '@/components/chat/message-bubble';
+import { TypingIndicator } from '@/components/chat/typing-indicator';
+import { WelcomeScreen } from '@/components/chat/welcome-screen';
 import { QUICK_ACTIONS } from '@/components/chat/chat-container/chat-container-data';
 import { useChatContainer } from '@/components/chat/chat-container/use-chat-container';
 
@@ -20,11 +20,17 @@ export function ChatContainer() {
     handleQuickAction,
     handleSend,
     handleStart,
+    handleVoiceToggle,
     hasStarted,
     isLoading,
+    interimText,
+    liveState,
     messages,
     scrollRef,
   } = useChatContainer();
+
+  const isLiveActive =
+    liveState === 'listening' || liveState === 'thinking' || liveState === 'speaking' || liveState === 'connecting';
 
   return (
     <div className="flex h-[100dvh] flex-col bg-ultracem-surface-muted">
@@ -43,6 +49,24 @@ export function ChatContainer() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {liveState === 'listening' && (
+            <span className="flex items-center gap-1.5 rounded-full bg-red-500/20 px-2.5 py-1 text-caption font-semibold text-white animate-pulse">
+              <span className="h-2 w-2 rounded-full bg-red-400" />
+              LIVE
+            </span>
+          )}
+          {liveState === 'connecting' && (
+            <span className="flex items-center gap-1.5 rounded-full bg-ultracem-yellow/20 px-2.5 py-1 text-caption font-semibold text-white">
+              <span className="h-2 w-2 rounded-full bg-ultracem-yellow animate-spin" />
+              Conectando
+            </span>
+          )}
+          {isLiveActive && liveState !== 'listening' && liveState !== 'connecting' && (
+            <span className="flex items-center gap-1.5 rounded-full bg-ultracem-green/20 px-2.5 py-1 text-caption font-semibold text-white">
+              <span className="h-2 w-2 rounded-full bg-ultracem-green" />
+              Voz
+            </span>
+          )}
           <span className="hidden text-caption text-white/70 sm:inline">
             Tiempo estimado: &lt;90s
           </span>
@@ -112,7 +136,13 @@ export function ChatContainer() {
               </div>
             )}
 
-            <InputBar onSend={handleSend} disabled={isLoading} />
+            <InputBar
+              onSend={handleSend}
+              disabled={isLoading}
+              liveState={liveState}
+              interimText={interimText}
+              onVoiceToggle={handleVoiceToggle}
+            />
           </div>
         )}
       </div>

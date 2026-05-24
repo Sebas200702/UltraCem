@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import { useChatStore } from "@/store";
+'use client';
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useChatStore } from '@/store';
+import { useGeminiLive, parseLiveResponse, type LiveState } from '@/hooks/use-gemini-live';
 import { type CalculationData } from '@/components/chat/chat-container/chat-container-types';
 
 function adaptRecommendation(
@@ -59,6 +62,68 @@ export function useChatContainer() {
   const [hasStarted, setHasStarted] = useState(messages.length > 0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const handleLiveTranscript = useCallback(
+    (text: string) => {
+      // transcript is displayed via interimText, no need to add to chat here
+    },
+    [],
+  );
+
+  const handleLiveResponse = useCallback(
+    (text: string, parsed: Record<string, unknown> | null) => {
+      const liveResponse = parseLiveResponse(text);
+      if (liveResponse) {
+        // Add the reply as an assistant message to the chat
+        useChatStore.setState((state) => ({
+          messages: [
+            ...state.messages,
+            {
+              id: Math.random().toString(36).substring(2, 9),
+              role: 'assistant' as const,
+              content: liveResponse.reply,
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        }));
+
+        // Update extracted data if present
+        if (liveResponse.extractedData) {
+          useChatStore.setState((state) => ({
+            extractedData: {
+              ...state.extractedData,
+              ...(liveResponse.extractedData as Record<string, unknown>),
+            },
+          }));
+        }
+
+        // Trigger calculation if ready
+        if (liveResponse.isReadyForCalculation) {
+          useChatStore.getState().performCalculation();
+        }
+      } else if (text) {
+        // Fallback: just add the raw text as assistant message
+        useChatStore.setState((state) => ({
+          messages: [
+            ...state.messages,
+            {
+              id: Math.random().toString(36).substring(2, 9),
+              role: 'assistant' as const,
+              content: text,
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        }));
+      }
+    },
+    [],
+  );
+
+  const live = useGeminiLive({
+    onTranscript: handleLiveTranscript,
+    onResponse: handleLiveResponse,
+    onError: (err) => console.error('[live]', err),
+  });
+
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -75,9 +140,9 @@ export function useChatContainer() {
           messages: [
             {
               id: Math.random().toString(36).substring(2, 9),
-              role: "assistant" as const,
+              role: 'assistant' as const,
               content:
-                "¡Hola! Soy tu asistente UltraCem. Cuéntame qué obra tienes en mente. Puedes decirme algo como *'una placa de 5x4 metros de 10cm'* o *'muro de 3m largo por 2.5m alto'*. ",
+                '¡Hola! Soy Vanesa de UltraCem. Puedes escribir o usar el micrófono 🎤 Cuéntame qué obra tienes en mente.',
               timestamp: new Date().toISOString(),
             },
           ],
@@ -97,17 +162,22 @@ export function useChatContainer() {
 
   const handleNewCalculation = () => {
     startNewConversation();
+    live.disconnect();
     useChatStore.setState({
       messages: [
         {
           id: Math.random().toString(36).substring(2, 9),
-          role: "assistant" as const,
-          content: "Claro. ¿Qué otro proyecto vas a construir?",
+          role: 'assistant' as const,
+          content: 'Claro. ¿Qué otro proyecto vas a construir?',
           timestamp: new Date().toISOString(),
         },
       ],
     });
   };
+
+  const handleVoiceToggle = useCallback(() => {
+    live.toggleConnection();
+  }, [live.toggleConnection]);
 
   const displayMessages = messages.map((msg) => ({
     id: msg.id,
@@ -129,8 +199,11 @@ export function useChatContainer() {
     handleQuickAction,
     handleSend,
     handleStart,
+    handleVoiceToggle,
     hasStarted,
     isLoading,
+    liveState: live.state,
+    interimText: live.inputTranscript || live.outputTranscript,
     messages,
     scrollRef,
   };

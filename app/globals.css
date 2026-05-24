@@ -203,9 +203,30 @@
     animation: typing-dot 1.2s infinite;
   }
 
+@keyframes voice-ring {
+    0% {
+      transform: scale(1);
+      opacity: 0.6;
+    }
+    100% {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+  }
+
+  .animate-voice-ring-1 {
+    animation: voice-ring 1.4s ease-out infinite;
+  }
+
+  .animate-voice-ring-2 {
+    animation: voice-ring 1.4s ease-out 0.4s infinite;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-fade-up,
-    .animate-typing-dot {
+    .animate-typing-dot,
+    .animate-voice-ring-1,
+    .animate-voice-ring-2 {
       animation: none;
     }
   }
