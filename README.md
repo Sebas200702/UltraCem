@@ -4,7 +4,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.4-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
 [![Supabase](https://img.shields.io/badge/Supabase-2.43-3FCF8E?logo=supabase)](https://supabase.com/)
-[![Gemini](https://img.shields.io/badge/Gemini-1.5--flash-4285F4?logo=google)](https://ai.google.dev/)
+[![Gemini](https://img.shields.io/badge/Gemini-3.1--flash-4285F4?logo=google)](https://ai.google.dev/)
 [![Bun](https://img.shields.io/badge/Bun-1.0-14151A?logo=bun)](https://bun.sh/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
@@ -34,7 +34,7 @@ UltraCem Chatbot es una aplicación web progresiva (PWA) mobile-first que permit
 | **React** | 18.3 | UI |
 | **TypeScript** | 5.4 | Tipado estricto |
 | **Supabase** | 2.43 | Base de datos PostgreSQL, Auth, RLS |
-| **Gemini API** | 1.5 Flash | Motor de NLP |
+| **Gemini API** | 3.1 Flash | Motor de NLP |
 | **Tailwind CSS** | 3.4 | Estilos utility-first |
 | **Zustand** | — | Estado del cliente |
 | **Zod** | — | Validación de esquemas |

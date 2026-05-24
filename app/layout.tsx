@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "UltraCem | Calculadora de materiales",
+  title: "UltraCem | Calculadora de materiales con IA",
   description:
     "Asistente para calcular cemento, arena y materiales de construcción.",
 };
@@ -20,6 +20,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+
     <html lang="es">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
