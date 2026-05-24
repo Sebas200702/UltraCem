@@ -30,7 +30,7 @@ export function HeroSection() {
           <h1 className="mb-5 text-[clamp(2rem,4vw,3rem)] font-bold leading-[1.1] tracking-tight text-white">
             Calcula tus materiales
             <br />
-            en <span className="text-ultracem-yellow">menos de 90</span>
+            en <span className="text-ultracem-yellow">solo</span>
             <br />
             segundos
           </h1>
