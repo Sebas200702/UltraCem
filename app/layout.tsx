@@ -28,15 +28,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-
-
     <html lang="es" className={`${montserrat.variable} scroll-smooth`}>
       <body
-        className="font-sans bg-ultracem-surface-off text-ultracem-gray-900 antialiased"
+        className="bg-ultracem-surface-off font-sans text-ultracem-gray-900 antialiased"
       >
         {children}
       </body>
-
     </html>
   );
 }

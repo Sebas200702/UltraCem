@@ -1,0 +1,29 @@
+---
+description: UltraCem atomic architecture enforcement
+globs: "src/**/*.{ts,tsx},app/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# UltraCem Architecture Rules
+
+## Naming
+1. Files and folders use kebab-case. React exports, types, and interfaces use PascalCase. Hooks use camelCase with the `use` prefix.
+2. Backend uses layer suffixes: `.service.ts`, `.repository.ts`, `.schema.ts`, `.types.ts`, `.mapper.ts`.
+
+## Frontend Component Anatomy
+3. Every component lives in `src/components/<feature>/<component>/`.
+4. Required files are `<component>.tsx` and `index.ts`.
+5. Add `use-<component>.ts` when there is extractable state, refs, effects, or handlers.
+6. Add `<component>-store.ts` only for shared component-owned Zustand state.
+7. Add `<component>-types.ts` for exported or non-trivial interfaces.
+8. Add `<component>-data.ts` for editable static arrays or dictionaries.
+9. `index.ts` reexports only public APIs, usually `export * from "./<component>"`.
+
+## Backend Domain Anatomy
+10. Each domain lives in `src/domains/<domain>/` with `<domain>.service.ts`, optional `<domain>.types.ts`, optional `<domain>.schema.ts`, optional `<domain>.repository.ts`, `__tests__/`, and `index.ts`.
+11. Route handlers in `app/api/**/route.ts` validate input and delegate to services. No business logic in route handlers.
+
+## Prohibited Patterns
+12. Flat component files like `Button.tsx`, `WelcomeScreen.tsx`, or `ProductForm.tsx`.
+13. Stores over 200 lines without a sibling `*-types.ts`.
+14. Imports into another package's internals, such as `@/components/chat/chat-container/use-chat-container`.

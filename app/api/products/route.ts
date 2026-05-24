@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { validateProductInput } from '@/domains/pricing/pricing-admin.service';
+import { validateProductInput } from '@/domains/pricing';
 
 export async function GET(request: NextRequest) {
   try {

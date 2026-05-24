@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { NLPService, type ConversationContext } from '@/domains/conversation/nlp.service';
+import { NLPService, type ConversationContext } from '@/domains/conversation';
 import { getGeminiApiKey } from '@/lib/gemini';
 import { prisma } from '@/lib/prisma';
 import type { ChatSendResponse, Message, MessageRole } from '@/types';

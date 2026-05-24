@@ -1,6 +1,6 @@
-import type { CalculationInput, Materials, MessageRole, RecommendationOutput } from './database.types';
+import type { CalculationInput, Materials, MessageRole, RecommendationOutput } from '@/types/database.types';
 
-export * from './database.types';
+export * from '@/types/database.types';
 
 export interface ChatMessage {
   role: MessageRole;
