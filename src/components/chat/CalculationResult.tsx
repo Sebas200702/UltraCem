@@ -1,18 +1,7 @@
 "use client";
 
 import { CalculationData } from "./ChatContainer";
-import { useState } from "react";
-import {
-  CheckCircle,
-  TreePine,
-  Wallet,
-  FileText,
-  RotateCcw,
-  ArrowRight,
-  MessageCircle,
-  Copy,
-  Share2,
-} from "lucide-react";
+import { CheckCircle, TreePine, Wallet, FileText, RotateCcw, ArrowRight } from "lucide-react";
 
 interface CalculationResultProps {
   data: CalculationData;
@@ -27,67 +16,20 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function generateSummary(data: CalculationData): string {
-  const lines = [
-    `*Resultado del cálculo UltraCem*`,
-    ``,
-    `*Volumen total:* ${data.volume_m3.toFixed(2)} m³`,
-    `*Materiales necesarios:*`,
-    `- Cemento: ${data.materials.cement_bags_50kg} sacos de 50kg`,
-    `- Arena: ${data.materials.sand_m3} m³`,
-    ...(data.materials.gravel_m3 ? [`- Grava: ${data.materials.gravel_m3} m³`] : []),
-    `- Agua: ${data.materials.water_liters} litros`,
-    ``,
-    `*Producto recomendado:* ${data.product.name} (${data.product.sku})`,
-    `*Precio por bulto:* ${formatCurrency(data.product.price_per_bag_cop)}`,
-    `*Costo estimado:* ${formatCurrency(data.estimated_cost_cop)}`,
-    `*Ahorro económico:* ${formatCurrency(data.savings_cop)}`,
-    `*Impacto ambiental:* ${Math.round(data.co2_saved_kg)} kg de CO₂ ahorrados`,
-  ];
-  return lines.join("\n");
-}
-
 export function CalculationResult({ data, onNewCalculation }: CalculationResultProps) {
-  const [copied, setCopied] = useState(false);
-
-  const summary = generateSummary(data);
-
-  const handleWhatsAppShare = () => {
-    const text = encodeURIComponent(summary);
-    window.open(`https://wa.me/573164034858?text=${text}`, "_blank", "noopener,noreferrer");
-  };
-
-  const handleCopySummary = async () => {
-    try {
-      await navigator.clipboard.writeText(summary);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch (err) {
-      console.error("Error al copiar al portapapeles:", err);
-    }
-  };
-
-  const handleNativeShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Resultado del cálculo UltraCem",
-          text: summary,
-        });
-      } catch (err) {
-        if ((err as Error).name !== "AbortError") {
-          handleCopySummary();
-        }
-      }
-    } else {
-      handleCopySummary();
-    }
-  };
-
   return (
     <div className="animate-fade-in-up">
       {/* Spec Sheet Container */}
-      <div className="relative overflow-hidden rounded-uc-card border border-ultracem-blue/20 bg-ultracem-surface shadow-uc-card">
+      <div className="corner-brackets relative overflow-hidden border border-ultracem-blue/20 bg-ultracem-surface shadow-uc-card">
+        {/* Blueprint grid background inside card */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(0,62,120,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0,62,120,0.3) 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
 
         {/* Header */}
         <div className="relative border-b border-dashed border-ultracem-blue/20 bg-ultracem-blue/5 px-5 py-4">
@@ -96,7 +38,7 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
               <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-ultracem-gray-600">
                 Hoja de especificaciones
               </p>
-              <h3 className="text-h2 font-bold tracking-wide text-ultracem-blue">
+              <h3 className="font-display text-2xl tracking-wide text-ultracem-blue">
                 RESULTADO DEL CÁLCULO
               </h3>
             </div>
@@ -110,7 +52,7 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
         <div className="relative px-5 py-4">
           <div className="flex items-baseline gap-2">
             <span className="text-body-sm text-ultracem-gray-600">Volumen total:</span>
-            <span className="text-h1 font-bold text-ultracem-blue">
+            <span className="font-display text-3xl text-ultracem-blue">
               {data.volume_m3.toFixed(2)}
             </span>
             <span className="text-sm font-medium text-ultracem-gray-600">m³</span>
@@ -140,7 +82,7 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
                     Cemento
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className="text-h3 font-bold text-ultracem-blue">
+                    <span className="font-display text-lg text-ultracem-blue">
                       {data.materials.cement_bags_50kg}
                     </span>
                     <span className="ml-1 text-xs text-ultracem-gray-600">
@@ -153,7 +95,7 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
                     Arena
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className="text-h3 font-bold text-ultracem-blue">
+                    <span className="font-display text-lg text-ultracem-blue">
                       {data.materials.sand_m3}
                     </span>
                     <span className="ml-1 text-xs text-ultracem-gray-600">m³</span>
@@ -165,7 +107,7 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
                       Grava
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="text-h3 font-bold text-ultracem-blue">
+                      <span className="font-display text-lg text-ultracem-blue">
                         {data.materials.gravel_m3}
                       </span>
                       <span className="ml-1 text-xs text-ultracem-gray-600">m³</span>
@@ -177,7 +119,7 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
                     Agua
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <span className="text-h3 font-bold text-ultracem-blue">
+                    <span className="font-display text-lg text-ultracem-blue">
                       {data.materials.water_liters}
                     </span>
                     <span className="ml-1 text-xs text-ultracem-gray-600">litros</span>
@@ -207,7 +149,7 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
             </p>
             <div className="flex items-baseline gap-2">
               <span className="text-xs text-ultracem-gray-600">Precio:</span>
-              <span className="text-h2 font-bold text-ultracem-blue">
+              <span className="font-display text-xl text-ultracem-blue">
                 {formatCurrency(data.product.price_per_bag_cop)}
               </span>
               <span className="text-xs text-ultracem-gray-600">/ bulto</span>
@@ -225,7 +167,7 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
                 Ahorro económico
               </span>
             </div>
-            <p className="mb-1 text-h2 font-bold text-ultracem-green">
+            <p className="mb-1 font-display text-2xl text-ultracem-green">
               {formatCurrency(data.savings_cop)}
             </p>
             <p className="text-[10px] leading-relaxed text-ultracem-gray-600">
@@ -241,7 +183,7 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
                 Impacto ambiental
               </span>
             </div>
-            <p className="mb-1 text-h2 font-bold text-ultracem-green">
+            <p className="mb-1 font-display text-2xl text-ultracem-green">
               {Math.round(data.co2_saved_kg)} kg
             </p>
             <p className="text-[10px] leading-relaxed text-ultracem-gray-600">
@@ -278,39 +220,6 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
             <span>Nuevo cálculo</span>
           </button>
         </div>
-
-        {/* Share Actions */}
-        <div className="relative flex flex-col gap-2 border-t border-dashed border-ultracem-blue/20 px-5 py-4 sm:flex-row">
-          <button
-            onClick={handleWhatsAppShare}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: "#25D366" }}
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span>WhatsApp</span>
-          </button>
-          <button
-            onClick={handleCopySummary}
-            className="btn-outline flex flex-1 items-center justify-center gap-2"
-          >
-            <Copy className="h-4 w-4" />
-            <span>Copiar resumen</span>
-          </button>
-          <button
-            onClick={handleNativeShare}
-            className="btn-secondary flex flex-1 items-center justify-center gap-2"
-          >
-            <Share2 className="h-4 w-4" />
-            <span>Compartir</span>
-          </button>
-        </div>
-
-        {/* Toast notification */}
-        {copied && (
-          <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-ultracem-gray-900 px-4 py-2 text-xs font-medium text-white shadow-lg animate-fade-in-up">
-            ¡Copiado al portapapeles!
-          </div>
-        )}
       </div>
     </div>
   );
