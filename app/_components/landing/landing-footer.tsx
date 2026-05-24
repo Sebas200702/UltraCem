@@ -1,3 +1,5 @@
+import { UltraCemLogo } from "../ultracem-logo";
+
 const footerLinks = [
   { label: "ultracem.co", href: "https://ultracem.co/" },
   { label: "Productos", href: "https://ultracem.co/productos/" },
@@ -13,12 +15,7 @@ export function LandingFooter() {
   return (
     <footer className="bg-ultracem-blue-dark px-6 py-10">
       <div className="mx-auto flex max-w-uc-container flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-[7px] bg-ultracem-yellow text-xs font-bold text-ultracem-blue">
-            UC
-          </div>
-          <span className="text-sm font-semibold text-white/80">UltraCem</span>
-        </div>
+        <UltraCemLogo variant="light" className="h-12 w-auto" />
         <div className="flex flex-wrap justify-center gap-5">
           {footerLinks.map((link) => (
             <a
