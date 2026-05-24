@@ -7,6 +7,13 @@ export interface Message {
   timestamp: string;
 }
 
+export interface AppliedStandard {
+  code: string;
+  title: string;
+  implication: string;
+  sourceUrl: string;
+}
+
 export interface CalculationData {
   volume_m3: number;
   materials: {
@@ -20,6 +27,7 @@ export interface CalculationData {
     name: string;
     sku: string;
     price_per_bag_cop: number;
+    product_url?: string | null;
     datasheet_url: string | null;
   };
   quantity_bags: number;
@@ -31,6 +39,12 @@ export interface CalculationData {
     economic_reason: string;
     environmental_reason?: string;
   };
+  region?: string | null;
+  regionLabel?: string;
+  standardsApplied?: AppliedStandard[];
+  formulaUsed?: string;
+  wasteFactor?: number;
+  warnings?: Array<{ type: string; message: string; severity: string }>;
 }
 
 export interface QuickAction {

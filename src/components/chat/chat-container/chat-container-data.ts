@@ -1,25 +1,65 @@
-import { BrickWall, Hammer, PaintBucket, Ruler } from "lucide-react";
+import {
+  BrickWall,
+  Brush,
+  Building2,
+  Circle,
+  Construction,
+  Grid2x2,
+  Hammer,
+  Layers,
+  PaintBucket,
+} from "lucide-react";
 import { type QuickAction } from '@/components/chat/chat-container/chat-container-types';
 
 export const QUICK_ACTIONS: QuickAction[] = [
   {
-    label: "Placa",
-    icon: Ruler,
-    prompt: "Necesito calcular una placa de 5m x 4m x 10cm",
+    label: "Placa de entrepiso",
+    icon: Layers,
+    prompt: "Quiero calcular una placa de entrepiso",
   },
   {
-    label: "Muro",
+    label: "Piso en concreto",
+    icon: Grid2x2,
+    prompt: "Quiero calcular un piso de concreto",
+  },
+  {
+    label: "Andén",
+    icon: Construction,
+    prompt: "Quiero calcular un andén de concreto",
+  },
+  {
+    label: "Zapata",
+    icon: Building2,
+    prompt: "Quiero calcular una zapata de cimentación",
+  },
+  {
+    label: "Muro bloque 10",
     icon: BrickWall,
-    prompt: "Muro de 3m de largo por 2.5m de alto, bloque de 15",
+    prompt: "Quiero calcular un muro en bloque 10",
   },
   {
-    label: "Columna",
+    label: "Muro bloque 15",
+    icon: BrickWall,
+    prompt: "Quiero calcular un muro en bloque 15",
+  },
+  {
+    label: "Columna rectangular",
     icon: Hammer,
-    prompt: "Columna de 30x30 y 3m de altura",
+    prompt: "Quiero calcular una columna rectangular",
   },
   {
-    label: "Revoque",
+    label: "Columna circular",
+    icon: Circle,
+    prompt: "Quiero calcular una columna circular",
+  },
+  {
+    label: "Revoque interior",
     icon: PaintBucket,
-    prompt: "Revocar 50 metros cuadrados con 2cm",
+    prompt: "Quiero calcular un revoque interior",
+  },
+  {
+    label: "Revoque exterior",
+    icon: Brush,
+    prompt: "Quiero calcular un revoque exterior",
   },
 ];

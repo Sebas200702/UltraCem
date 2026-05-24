@@ -40,7 +40,7 @@ function loadEnvFile(filename: string) {
 loadEnvFile('.env.local');
 loadEnvFile('.env');
 
-const LIVE_SYSTEM_PROMPT = `Eres Vanesa, la asistente de voz de UltraCem. Hablas en español colombiano de forma clara, breve y natural — como si hablaras por teléfono con un maestro de obra.
+const LIVE_SYSTEM_PROMPT = `Eres Vanesa, la asistente de voz de UltraCem. Hablas en español colombiano de forma clara, breve y natural, como si hablaras por teléfono con un maestro de obra.
 
 CONTEXTO:
 - Usuario típico: maestro de obra colombiano con años de experiencia
@@ -53,29 +53,19 @@ ESTRUCTURAS SOPORTADAS:
 3. COLUMNA: base × altura
 4. REVOQUE: área × espesor
 
-FORMATO DE RESPUESTA (obligatorio):
-Responde SIEMPRE en JSON:
-{
-  "reply": "respuesta breve y natural para el usuario",
-  "intent": "greeting|dimension_extraction|confirmation|calculation|unknown",
-  "extractedData": {
-    "structureType": "slab|wall|column|plaster",
-    "dimensions": { "length_m": number, "width_m": number, "height_m": number, "thickness_m": number },
-    "resistancePsi": 3000
-  },
-  "isReadyForCalculation": boolean
-}
-
 REGLAS:
+- Responde SOLO con frases naturales para el usuario. No respondas en JSON, XML, markdown ni bloques de código.
+- Nunca leas nombres de campos como "reply", "intent", "extractedData" o "isReadyForCalculation".
 - Convierte a metros: "bloque de 15" = 0.15m, "bulto" = bolsa 50kg
 - Si falta algo, pregunta de forma breve
 - No más de 2 preguntas antes de calcular
-- Si tienes TODA la info, confirma y marca isReadyForCalculation=true
+- Si tienes TODA la info, confirma con una frase clara y breve
 - Habla de forma natural, nunca digas "en formato JSON"`;
 
 interface ClientSession {
   geminiSession: Session | null;
   extractedData: Record<string, unknown>;
+  inputTranscriptBuffer: string;
   textBuffer: string;
   outputTranscriptBuffer: string;
 }
@@ -106,13 +96,23 @@ function handleGeminiMessage(
     }
 
     if (content.inputTranscription?.text) {
+      clientSession.inputTranscriptBuffer += content.inputTranscription.text;
+      const finished = content.inputTranscription.finished ?? false;
+      const text = finished
+        ? clientSession.inputTranscriptBuffer.trim()
+        : clientSession.inputTranscriptBuffer;
+
       ws.send(
         JSON.stringify({
           type: 'input_transcription',
-          text: content.inputTranscription.text,
-          finished: content.inputTranscription.finished ?? false,
+          text,
+          finished,
         }),
       );
+
+      if (finished) {
+        clientSession.inputTranscriptBuffer = '';
+      }
     }
 
     if (content.outputTranscription?.text) {
@@ -128,6 +128,7 @@ function handleGeminiMessage(
 
     if (content.turnComplete) {
       const fullText = (clientSession.textBuffer || clientSession.outputTranscriptBuffer).trim();
+      clientSession.inputTranscriptBuffer = '';
       clientSession.textBuffer = '';
       clientSession.outputTranscriptBuffer = '';
 
@@ -139,10 +140,12 @@ function handleGeminiMessage(
         }
       } catch {}
 
+      const responseText = typeof parsed?.reply === 'string' ? parsed.reply : fullText;
+
       ws.send(
         JSON.stringify({
           type: 'turn_complete',
-          text: fullText,
+          text: responseText,
           parsed,
         }),
       );
@@ -175,6 +178,7 @@ app.prepare().then(async () => {
     const clientSession: ClientSession = {
       geminiSession: null,
       extractedData: {},
+      inputTranscriptBuffer: '',
       textBuffer: '',
       outputTranscriptBuffer: '',
     };
@@ -201,6 +205,7 @@ app.prepare().then(async () => {
 
           const extractedData = (msg.extractedData as Record<string, unknown>) ?? {};
           clientSession.extractedData = extractedData;
+          clientSession.inputTranscriptBuffer = '';
           clientSession.textBuffer = '';
           clientSession.outputTranscriptBuffer = '';
 
@@ -304,6 +309,7 @@ app.prepare().then(async () => {
             clientSession.geminiSession.close();
             clientSession.geminiSession = null;
           }
+          clientSession.inputTranscriptBuffer = '';
           clientSession.textBuffer = '';
           clientSession.outputTranscriptBuffer = '';
           ws.send(JSON.stringify({ type: 'session_ended' }));

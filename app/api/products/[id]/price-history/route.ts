@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireAdmin } from '@/lib/auth-guard';
 import { prisma } from '@/lib/prisma';
+import { adminRateLimiter, enforceRateLimit } from '@/lib/rate-limiter';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCheck = await requireAdmin();
+  if ('response' in adminCheck) return adminCheck.response;
+  const rateLimitResponse = await enforceRateLimit(request, adminRateLimiter);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const product = await prisma.product.findUnique({ where: { id: params.id } });
     if (!product) {

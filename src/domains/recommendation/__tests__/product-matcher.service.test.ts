@@ -84,7 +84,8 @@ describe('recommend()', () => {
 
     expect(result).not.toBeNull();
     expect(result!.estimated_cost_cop).toBe(22 * 28500);
-    expect(result!.savings_cop).toBe(22 * 28500 * 0.20);
+    // savings vs. most expensive comparable in same category (UC-EST-GR-4000 at 32500)
+    expect(result!.savings_cop).toBe((32500 - 28500) * 22);
     expect(result!.quantity_bags).toBe(22);
   });
 
@@ -159,7 +160,16 @@ describe('calculateCostAnalysis()', () => {
     const result = calculateCostAnalysis(mockProducts[0], baseMaterials, 'slab');
 
     expect(result.estimated_cost_cop).toBe(22 * 28500);
-    expect(result.savings_cop).toBe(22 * 28500 * 0.20);
+    // without comparable prices, fallback is unit price * 1.10 → savings = 10% of total
+    expect(result.savings_cop).toBe((Math.round(28500 * 1.10) - 28500) * 22);
+  });
+
+  it('uses comparable prices when provided to compute real savings', () => {
+    const comparables = [32500, 22000];
+    const result = calculateCostAnalysis(mockProducts[0], baseMaterials, 'slab', comparables);
+
+    // savings vs. the most expensive comparable that is above unit price
+    expect(result.savings_cop).toBe((32500 - 28500) * 22);
   });
 });
 

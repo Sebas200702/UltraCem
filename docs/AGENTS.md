@@ -84,6 +84,20 @@ src/app/
 - No desactives RLS sin un modelo de seguridad explícito.
 - No hagas SQL raw innecesario si el query builder lo puede resolver.
 
+#### Admin Role Setup
+- El panel `/admin` usa Supabase Auth y autoriza únicamente usuarios con `app_metadata.role = "admin"`.
+- No uses `user_metadata` para autorización: el usuario puede modificarlo. Usa siempre `raw_app_meta_data` / `app_metadata`.
+- Para otorgar permisos admin desde SQL seguro:
+  ```sql
+  update auth.users
+  set raw_app_meta_data = jsonb_set(
+    coalesce(raw_app_meta_data, '{}'::jsonb),
+    '{role}',
+    '"admin"'::jsonb
+  )
+  where email = 'admin@ultracem.co';
+  ```
+
 ---
 
 ### 3. Tailwind CSS Rules
@@ -122,7 +136,7 @@ src/app/
 ### 4. Gemini API Rules
 
 #### ✅ DO:
-- **Modelo:** `gemini-3.1-flash` para MVP (rápido y costo-eficiente).
+- **Modelo:** `gemini-2.5-flash` para MVP (rápido y costo-eficiente).
 - **Temperature baja (0.3)** para respuestas consistentes y JSON estable.
 - **Implementa reintentos con backoff** en integración de Gemini.
 - **Devuelve SIEMPRE JSON estructurado** para el NLP (según `docs/specs.md`).

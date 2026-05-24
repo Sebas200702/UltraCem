@@ -27,6 +27,8 @@ export function scoreProduct(product: Product, input: RecommendationInput): numb
     const diff = Math.abs(resistance - input.resistancePsi) / input.resistancePsi;
     if (diff <= 0.2) {
       score += 30;
+    } else if (diff <= 0.4) {
+      score += 10;
     }
   }
 
@@ -34,7 +36,22 @@ export function scoreProduct(product: Product, input: RecommendationInput): numb
     score += 15;
   }
 
+  // product *type* fit: structural concrete needs cement (cement_content_kg_per_m3),
+  // mortar/plaster needs a pre-mixed product (coverage_m2_per_bag). Without this,
+  // the recommender happily suggests "Mezcla Lista Tipo M" for a slab, which is wrong.
+  const hasCementContent = product.technical_specs.cement_content_kg_per_m3 !== undefined;
+  const hasCoverage = product.technical_specs.coverage_m2_per_bag !== undefined;
+  const isConcreteJob = input.structureType === 'slab' || input.structureType === 'column';
+
+  if (isConcreteJob && hasCementContent) score += 25;
+  if (isConcreteJob && hasCoverage && !hasCementContent) score -= 30;
+  if (!isConcreteJob && hasCoverage) score += 20;
+
   score += product.is_active ? 15 : -50;
+
+  if (product.co2_per_kg < 0.75) score += 20;
+  else if (product.co2_per_kg < 0.85) score += 10;
+  if (product.co2_per_kg > 0.900) score -= 10;
 
   return score;
 }
@@ -56,16 +73,42 @@ export function findBestProduct(products: Product[], input: RecommendationInput)
   return bestProduct;
 }
 
+/**
+ * Análisis de costos y ahorro ambiental.
+ *
+ * FUENTES:
+ * - Ahorro económico: diferencia vs el producto comparable más caro activo del mismo tipo.
+ *   Si no hay comparables, se usa un margen del 10% sobre el precio unitario
+ *   (estimación conservadora de sobrecompra típica en obra).
+ * - CO₂: baseline de cemento Portland genérico = 0.950 kg CO₂/kg cemento.
+ *   Fuente: referencia sectorial NTC-6112 y promedios industriales del sector cementero.
+ *   Se usa el peso real del bulto (presentation_kg) para no inflar números con bultos de 25-40 kg.
+ */
 export function calculateCostAnalysis(
   product: Product,
   materials: Materials,
-  _structureType: StructureType
+  _structureType: StructureType,
+  comparablePrices: number[] = [],
 ): CostAnalysis {
   const quantityBags = materials.cement_bags_50kg;
-  const estimatedCostCop = Math.round(quantityBags * product.price_per_bag_cop * 100) / 100;
-  const savingsCop = Math.round(estimatedCostCop * 0.20 * 100) / 100;
-  const totalCementKg = quantityBags * 50;
-  const co2SavedKg = Math.round(Math.max(0, (0.950 - product.co2_per_kg) * totalCementKg) * 100) / 100;
+  const unitPrice = Number(product.price_per_bag_cop) || 0;
+  const estimatedCostCop = Math.round(quantityBags * unitPrice);
+
+  // real savings: against the most expensive comparable product in the same category.
+  // if no comparables are provided, fall back to a conservative 10% (vs. typical
+  // over-ordering by ±10%).
+  const validComparables = comparablePrices.filter((price) => Number.isFinite(price) && price > unitPrice);
+  const referencePrice = validComparables.length > 0 ? Math.max(...validComparables) : unitPrice * 1.10;
+  const savingsCop = Math.max(0, Math.round((referencePrice - unitPrice) * quantityBags));
+
+  // co2 savings: use the actual bag weight from technical_specs when available
+  // (40 kg or 25 kg products were being treated as 50 kg, inflating numbers).
+  const specs = (product.technical_specs ?? {}) as Record<string, unknown>;
+  const bagWeightKg = Number(specs.presentation_kg) || 50;
+  const totalCementKg = quantityBags * bagWeightKg;
+  // Baseline: cemento Portland genérico según referencia sectorial NTC-6112
+  const co2Reference = 0.950;
+  const co2SavedKg = Math.round(Math.max(0, (co2Reference - Number(product.co2_per_kg)) * totalCementKg) * 10) / 10;
 
   return {
     estimated_cost_cop: estimatedCostCop,
@@ -111,7 +154,13 @@ export function recommend(
   const product = findBestProduct(products, input);
   if (!product) return null;
 
-  const costAnalysis = calculateCostAnalysis(product, input.materials, input.structureType);
+  // comparable = other active products in the same category, used as a price
+  // reference to compute a real (non-fake) savings number.
+  const comparablePrices = products
+    .filter((p) => p.is_active && p.category === product.category && p.id !== product.id)
+    .map((p) => Number(p.price_per_bag_cop) || 0);
+
+  const costAnalysis = calculateCostAnalysis(product, input.materials, input.structureType, comparablePrices);
   const justification = generateJustification(product, input, costAnalysis);
 
   return {
