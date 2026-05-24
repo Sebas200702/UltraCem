@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { validateProductInput } from '@/domains/pricing/pricing-admin.service';
+import { productCreateSchema } from '@/domains/pricing';
+import { requireAdmin } from '@/lib/auth-guard';
+import { errorMessages } from '@/lib/error-handler';
+import { adminRateLimiter, enforceRateLimit } from '@/lib/rate-limiter';
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,34 +42,42 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const adminCheck = await requireAdmin();
+  if ('response' in adminCheck) return adminCheck.response;
+  const rateLimitResponse = await enforceRateLimit(request, adminRateLimiter);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await request.json().catch(() => null);
-    if (!body) {
+    const validation = productCreateSchema.safeParse(body);
+
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_BODY', message: 'Cuerpo de solicitud inválido.' } },
+        {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: validation.error.issues.map((issue) => issue.message).join(' '),
+            details: validation.error.issues,
+          },
+        },
         { status: 400 }
       );
     }
 
-    const validation = validateProductInput(body);
-    if (!validation.valid) {
-      return NextResponse.json(
-        { success: false, error: { code: 'VALIDATION_ERROR', message: validation.errors.join('. ') } },
-        { status: 400 }
-      );
-    }
+    const input = validation.data;
 
     const product = await prisma.product.create({
       data: {
-        sku: validation.data!.sku,
-        name: validation.data!.name,
-        category: validation.data!.category,
-        subcategory: validation.data!.subcategory ?? null,
-        technical_specs: JSON.parse(JSON.stringify(validation.data!.technical_specs)),
-        price_per_bag_cop: validation.data!.price_per_bag_cop,
-        co2_per_kg: validation.data!.co2_per_kg,
-        datasheet_url: validation.data!.datasheet_url ?? null,
-        is_active: validation.data!.is_active ?? true,
+        sku: input.sku,
+        name: input.name,
+        category: input.category,
+        subcategory: input.subcategory ?? null,
+        technical_specs: JSON.parse(JSON.stringify(input.technical_specs)),
+        price_per_bag_cop: input.price_per_bag_cop,
+        co2_per_kg: input.co2_per_kg,
+        datasheet_url: input.datasheet_url ?? null,
+        is_active: input.is_active,
       },
     });
 
@@ -80,7 +91,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error POST /api/products:', error);
     return NextResponse.json(
-      { success: false, error: { code: 'DATABASE_ERROR', message: 'Error al crear producto.' } },
+      { success: false, error: { code: 'DATABASE_ERROR', message: errorMessages.DATABASE_ERROR } },
       { status: 500 }
     );
   }

@@ -24,7 +24,7 @@ export function HeroSection() {
               <MessageCircle className="h-4 w-4" strokeWidth={2.5} />
               Hablar con Vanesa
             </Button>
-            <Button href="#ejemplos" variant="white">
+            <Button href="/chat" variant="white">
               Ver como funciona
             </Button>
           </div>

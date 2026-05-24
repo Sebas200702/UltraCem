@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store';
-import { useGeminiLive, parseLiveResponse, type LiveState } from '@/hooks/use-gemini-live';
+import { useGeminiLive, parseLiveResponse } from '@/hooks/use-gemini-live';
 import { type CalculationData } from '@/components/chat/chat-container/chat-container-types';
 
 function adaptRecommendation(
@@ -33,6 +33,14 @@ function adaptRecommendation(
       environmental_reason?: string;
     };
   } | null,
+  meta?: {
+    formulaUsed?: string;
+    wasteFactor?: number;
+    region?: string | null;
+    regionLabel?: string;
+    standardsApplied?: Array<{ code: string; title: string; implication: string; sourceUrl: string }>;
+    warnings?: Array<{ type: string; message: string; severity: string }>;
+  } | null,
 ): CalculationData | null {
   if (!calc || !rec) return null;
 
@@ -45,6 +53,12 @@ function adaptRecommendation(
     savings_cop: rec.savings_cop,
     co2_saved_kg: rec.co2_saved_kg,
     justification: rec.justification,
+    region: meta?.region ?? null,
+    regionLabel: meta?.regionLabel,
+    standardsApplied: meta?.standardsApplied,
+    formulaUsed: meta?.formulaUsed,
+    wasteFactor: meta?.wasteFactor,
+    warnings: meta?.warnings,
   };
 }
 
@@ -55,30 +69,51 @@ export function useChatContainer() {
     error,
     currentCalculation,
     currentRecommendation,
+    calculationMeta,
     sendMessage,
     startNewConversation,
   } = useChatStore();
 
   const [hasStarted, setHasStarted] = useState(messages.length > 0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const lastLiveTranscriptRef = useRef('');
 
   const handleLiveTranscript = useCallback(
     (text: string) => {
-      // transcript is displayed via interimText, no need to add to chat here
+      const content = text.trim();
+      if (!content || content === lastLiveTranscriptRef.current) return;
+
+      lastLiveTranscriptRef.current = content;
+      useChatStore.setState((state) => ({
+        messages: [
+          ...state.messages,
+          {
+            id: crypto.randomUUID(),
+            role: 'user' as const,
+            content,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      }));
+
+      // also pipe the transcript through the text NLP so dimensions get extracted
+      // and the calculation fires when everything is in. the voice keeps the
+      // natural conversation; this path is just for structured data.
+      void useChatStore.getState().extractFromVoice(content);
     },
     [],
   );
 
   const handleLiveResponse = useCallback(
     (text: string, parsed: Record<string, unknown> | null) => {
-      const liveResponse = parseLiveResponse(text);
+      const liveResponse = parseLiveResponse(text, parsed);
       if (liveResponse) {
         // Add the reply as an assistant message to the chat
         useChatStore.setState((state) => ({
           messages: [
             ...state.messages,
             {
-              id: Math.random().toString(36).substring(2, 9),
+              id: crypto.randomUUID(),
               role: 'assistant' as const,
               content: liveResponse.reply,
               timestamp: new Date().toISOString(),
@@ -106,7 +141,7 @@ export function useChatContainer() {
           messages: [
             ...state.messages,
             {
-              id: Math.random().toString(36).substring(2, 9),
+              id: crypto.randomUUID(),
               role: 'assistant' as const,
               content: text,
               timestamp: new Date().toISOString(),
@@ -139,7 +174,7 @@ export function useChatContainer() {
         return {
           messages: [
             {
-              id: Math.random().toString(36).substring(2, 9),
+              id: crypto.randomUUID(),
               role: 'assistant' as const,
               content:
                 '¡Hola! Soy Vanesa de UltraCem. Puedes escribir o usar el micrófono 🎤 Cuéntame qué obra tienes en mente.',
@@ -163,10 +198,11 @@ export function useChatContainer() {
   const handleNewCalculation = () => {
     startNewConversation();
     live.disconnect();
+    lastLiveTranscriptRef.current = '';
     useChatStore.setState({
       messages: [
         {
-          id: Math.random().toString(36).substring(2, 9),
+          id: crypto.randomUUID(),
           role: 'assistant' as const,
           content: 'Claro. ¿Qué otro proyecto vas a construir?',
           timestamp: new Date().toISOString(),
@@ -177,7 +213,7 @@ export function useChatContainer() {
 
   const handleVoiceToggle = useCallback(() => {
     live.toggleConnection();
-  }, [live.toggleConnection]);
+  }, [live]);
 
   const displayMessages = messages.map((msg) => ({
     id: msg.id,
@@ -189,6 +225,7 @@ export function useChatContainer() {
   const calculationData = adaptRecommendation(
     currentCalculation,
     currentRecommendation,
+    calculationMeta,
   );
 
   return {

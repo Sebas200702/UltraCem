@@ -7,6 +7,13 @@ export interface Message {
   timestamp: string;
 }
 
+export interface AppliedStandard {
+  code: string;
+  title: string;
+  implication: string;
+  sourceUrl: string;
+}
+
 export interface CalculationData {
   volume_m3: number;
   materials: {
@@ -31,6 +38,12 @@ export interface CalculationData {
     economic_reason: string;
     environmental_reason?: string;
   };
+  region?: string | null;
+  regionLabel?: string;
+  standardsApplied?: AppliedStandard[];
+  formulaUsed?: string;
+  wasteFactor?: number;
+  warnings?: Array<{ type: string; message: string; severity: string }>;
 }
 
 export interface QuickAction {

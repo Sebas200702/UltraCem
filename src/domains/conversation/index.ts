@@ -1,2 +1,2 @@
-export * from '@/domains/conversation/conversation.service';
-export type * from '@/domains/conversation/conversation.types';
+export * from './conversation.service';
+export type * from './conversation.types';

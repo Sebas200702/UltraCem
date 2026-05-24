@@ -11,24 +11,114 @@ function formatTime(isoString: string) {
   });
 }
 
-function renderContent(content: string) {
-  const parts = content.split(/(\*\*.*?\*\*|\n)/);
+/**
+ * Renderiza markdown básico de forma segura sin librerías externas.
+ * Soporta: negritas, bullets, enlaces, divisores y saltos de línea.
+ */
+function renderMarkdown(content: string): React.ReactNode[] {
+  const lines = content.split('\n');
+  const elements: React.ReactNode[] = [];
+  let inList = false;
+  let listItems: React.ReactNode[] = [];
 
-  return parts.map((part, i) => {
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={i} className="font-semibold">
-          {part.slice(2, -2)}
-        </strong>
+  const flushList = () => {
+    if (listItems.length > 0) {
+      elements.push(
+        <ul key={`list-${elements.length}`} className="my-1.5 ml-4 list-disc space-y-0.5 text-body-sm">
+          {listItems}
+        </ul>
       );
+      listItems = [];
+      inList = false;
+    }
+  };
+
+  const parseInline = (text: string): React.ReactNode[] => {
+    const parts: React.ReactNode[] = [];
+    let remaining = text;
+    let key = 0;
+
+    while (remaining.length > 0) {
+      // link [text](url)
+      const linkMatch = remaining.match(/^(.*?)\[([^\]]+)\]\(([^)]+)\)(.*)$/);
+      if (linkMatch) {
+        if (linkMatch[1]) parts.push(<span key={key++}>{linkMatch[1]}</span>);
+        parts.push(
+          <a
+            key={key++}
+            href={linkMatch[3]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-ultracem-blue underline hover:text-ultracem-blue/80"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {linkMatch[2]}
+          </a>
+        );
+        remaining = linkMatch[4];
+        continue;
+      }
+
+      // bold **text**
+      const boldMatch = remaining.match(/^(.*?)\*\*(.+?)\*\*(.*)$/);
+      if (boldMatch) {
+        if (boldMatch[1]) parts.push(<span key={key++}>{boldMatch[1]}</span>);
+        parts.push(<strong key={key++} className="font-semibold">{boldMatch[2]}</strong>);
+        remaining = boldMatch[3];
+        continue;
+      }
+
+      // italic *text* (single asterisk, not bullet)
+      const italicMatch = remaining.match(/^(.*?)\*(.+?)\*(.*)$/);
+      if (italicMatch) {
+        if (italicMatch[1]) parts.push(<span key={key++}>{italicMatch[1]}</span>);
+        parts.push(<em key={key++} className="italic">{italicMatch[2]}</em>);
+        remaining = italicMatch[3];
+        continue;
+      }
+
+      parts.push(<span key={key++}>{remaining}</span>);
+      break;
     }
 
-    if (part === "\n") {
-      return <br key={i} />;
+    return parts;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // divider *** or ---
+    if (/^\s*(\*{3,}|-{3,})\s*$/.test(line)) {
+      flushList();
+      elements.push(<hr key={`hr-${i}`} className="my-2 border-ultracem-gray-200" />);
+      continue;
     }
 
-    return <span key={i}>{part}</span>;
-  });
+    // bullet
+    if (/^\s*[-*]\s+/.test(line)) {
+      inList = true;
+      const text = line.replace(/^\s*[-*]\s+/, '');
+      listItems.push(<li key={`li-${i}`}>{parseInline(text)}</li>);
+      continue;
+    }
+
+    // empty line
+    if (line.trim() === '') {
+      flushList();
+      continue;
+    }
+
+    // regular paragraph
+    flushList();
+    elements.push(
+      <p key={`p-${i}`} className="text-body-sm leading-relaxed">
+        {parseInline(line)}
+      </p>
+    );
+  }
+
+  flushList();
+  return elements;
 }
 
 export function MessageBubble({ message, index }: MessageBubbleProps) {
@@ -66,10 +156,8 @@ export function MessageBubble({ message, index }: MessageBubbleProps) {
               : "rounded-2xl rounded-bl-sm border border-ultracem-gray-100 bg-ultracem-surface text-ultracem-gray-900 shadow-sm"
           }`}
         >
-          <div className="relative z-10">
-            <p className="text-body-sm leading-relaxed">
-              {renderContent(message.content)}
-            </p>
+          <div className="relative z-10 space-y-1">
+            {renderMarkdown(message.content)}
           </div>
         </div>
 

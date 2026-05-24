@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { productUpdateSchema } from '@/domains/pricing';
+import { requireAdmin } from '@/lib/auth-guard';
+import { errorMessages } from '@/lib/error-handler';
 import { prisma } from '@/lib/prisma';
+import { adminRateLimiter, enforceRateLimit } from '@/lib/rate-limiter';
 
 export async function GET(
   _request: NextRequest,
@@ -35,6 +39,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCheck = await requireAdmin();
+  if ('response' in adminCheck) return adminCheck.response;
+  const rateLimitResponse = await enforceRateLimit(request, adminRateLimiter);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const existing = await prisma.product.findUnique({ where: { id: params.id } });
     if (!existing) {
@@ -44,14 +53,22 @@ export async function PUT(
       );
     }
 
-    const body = await request.json().catch(() => null);
-    if (!body || typeof body !== 'object') {
+    const validation = productUpdateSchema.safeParse(await request.json().catch(() => null));
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: { code: 'INVALID_BODY', message: 'Cuerpo de solicitud inválido.' } },
+        {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: validation.error.issues.map((issue) => issue.message).join(' '),
+            details: validation.error.issues,
+          },
+        },
         { status: 400 }
       );
     }
 
+    const body = validation.data;
     const updateData: Record<string, unknown> = {};
     if (body.sku !== undefined) updateData.sku = body.sku;
     if (body.name !== undefined) updateData.name = body.name;
@@ -63,7 +80,9 @@ export async function PUT(
     if (body.datasheet_url !== undefined) updateData.datasheet_url = body.datasheet_url ?? null;
     if (body.is_active !== undefined) updateData.is_active = body.is_active;
 
-    const priceChanged = body.price_per_bag_cop !== undefined && Number(body.price_per_bag_cop) !== Number(existing.price_per_bag_cop);
+    const priceChanged =
+      body.price_per_bag_cop !== undefined &&
+      Number(body.price_per_bag_cop) !== Number(existing.price_per_bag_cop);
 
     if (priceChanged) {
       const [product] = await prisma.$transaction([
@@ -75,7 +94,7 @@ export async function PUT(
           data: {
             product_id: params.id,
             old_price: Number(existing.price_per_bag_cop),
-            new_price: body.price_per_bag_cop,
+            new_price: Number(body.price_per_bag_cop),
             changed_by: body.changed_by ?? null,
           },
         }),
@@ -105,16 +124,21 @@ export async function PUT(
   } catch (error) {
     console.error('Error PUT /api/products/[id]:', error);
     return NextResponse.json(
-      { success: false, error: { code: 'DATABASE_ERROR', message: 'Error al actualizar producto.' } },
+      { success: false, error: { code: 'DATABASE_ERROR', message: errorMessages.DATABASE_ERROR } },
       { status: 500 }
     );
   }
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const adminCheck = await requireAdmin();
+  if ('response' in adminCheck) return adminCheck.response;
+  const rateLimitResponse = await enforceRateLimit(request, adminRateLimiter);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const existing = await prisma.product.findUnique({ where: { id: params.id } });
     if (!existing) {
@@ -139,7 +163,7 @@ export async function DELETE(
   } catch (error) {
     console.error('Error DELETE /api/products/[id]:', error);
     return NextResponse.json(
-      { success: false, error: { code: 'DATABASE_ERROR', message: 'Error al eliminar producto.' } },
+      { success: false, error: { code: 'DATABASE_ERROR', message: errorMessages.DATABASE_ERROR } },
       { status: 500 }
     );
   }

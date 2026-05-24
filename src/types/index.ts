@@ -26,12 +26,22 @@ export interface ChatSendRequest {
   userId?: string;
 }
 
+export interface AppliedStandard {
+  code: string;
+  title: string;
+  implication: string;
+  sourceUrl: string;
+}
+
 export interface ChatSendResponse {
   conversationId: string;
   messageId: string;
   reply: string;
   isReadyForCalculation: boolean;
   extractedData?: Partial<CalculationInput>;
+  detectedRegion?: string | null;
+  standardsApplied?: AppliedStandard[];
+  warnings?: Array<{ type: string; message: string; severity: string }>;
 }
 
 export interface CalculateRequest {
@@ -49,4 +59,10 @@ export interface CalculateResponse {
   };
   recommendation: RecommendationOutput;
   summaryMessage: string;
+  region?: string | null;
+  regionLabel?: string;
+  standardsApplied?: AppliedStandard[];
+  formulaUsed?: string;
+  wasteFactor?: number;
+  warnings?: Array<{ type: string; message: string; severity: string }>;
 }

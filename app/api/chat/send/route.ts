@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { NLPService, type ConversationContext } from '@/domains/conversation/nlp.service';
+import { NLPService, hasRequiredDimensions, type ConversationContext } from '@/domains/conversation/nlp.service';
+import type { NLPResponse } from '@/domains/conversation/conversation.types';
 import { getGeminiApiKey } from '@/lib/gemini';
 import { prisma } from '@/lib/prisma';
+import { chatRateLimiter, enforceRateLimit } from '@/lib/rate-limiter';
+import { detectRegion, type ColombianRegion } from '@/domains/region/region.service';
+import { getStandardsService, type AppliedStandard } from '@/domains/standards/standards.service';
+import { fastClassify } from '@/domains/agents/fast-classifier';
 import type { ChatSendResponse, Message, MessageRole } from '@/types';
 
-
-
 const chatSendSchema = z.object({
-  conversationId: z.uuid('Debe ser un UUID válido').nullable().optional(),
+  conversationId: z.string().uuid().nullable().optional(),
   message: z.string().trim().min(1, 'Mensaje requerido'),
-  userId: z.uuid('Debe ser un UUID válido').optional(),
+  userId: z.string().uuid().optional(),
+  stream: z.boolean().optional().default(false),
 });
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -35,7 +39,13 @@ function toHistoryMessage(message: {
   };
 }
 
+const ENCODER = new TextEncoder();
+const METADATA_DELIMITER = '\n\n___METADATA___\n';
+
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = await enforceRateLimit(request, chatRateLimiter);
+  if (rateLimitResponse) return rateLimitResponse;
+
   const parsedBody = chatSendSchema.safeParse(await request.json().catch(() => null));
 
   if (!parsedBody.success) {
@@ -52,7 +62,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { conversationId, message, userId } = parsedBody.data;
+  const { conversationId, message, userId, stream: wantsStream } = parsedBody.data;
   const apiKey = getGeminiApiKey();
 
   if (!apiKey) {
@@ -104,7 +114,7 @@ export async function POST(request: NextRequest) {
       ? conversationMetadata.lastExtractedData
       : {};
 
-    const userMessage = await prisma.message.create({
+    const userMessageRecord = await prisma.message.create({
       data: {
         conversation_id: conversation.id,
         role: 'user',
@@ -114,47 +124,171 @@ export async function POST(request: NextRequest) {
     });
 
     const nlpService = new NLPService(apiKey);
+    const standardsService = getStandardsService(prisma);
+
+    const regionResult = detectRegion(message);
+    let region: ColombianRegion | null = regionResult.region;
+    let regionConfidence = regionResult.confidence;
+
+    const classification = fastClassify(message);
+
+    const standards = await standardsService.retrieveStandards(
+      classification.structureType,
+      region,
+      message
+    );
+
     const context: ConversationContext = {
       conversationId: conversation.id,
       messageHistory: previousMessages.map(toHistoryMessage),
       extractedData: currentExtractedData,
+      region,
+      regionConfidence,
+      standards: standards as ConversationContext['standards'],
     };
 
-    const response = await nlpService.processMessage(message, context);
+    const standardsApplied: AppliedStandard[] = standards.map((s) => ({
+      code: s.code,
+      title: s.title,
+      implication: s.implication || s.content,
+      sourceUrl: s.source,
+    }));
 
-    const assistantMessage = await prisma.message.create({
-      data: {
-        conversation_id: conversation.id,
-        role: 'assistant',
-        content: response.reply,
-        extracted_data: JSON.parse(JSON.stringify(response.extractedData ?? {})),
+    if (!wantsStream) {
+      // Non-streaming fallback (original behavior)
+      const response = await nlpService.processMessage(message, context);
+
+      const assistantMessage = await prisma.message.create({
+        data: {
+          conversation_id: conversation.id,
+          role: 'assistant',
+          content: response.reply,
+          extracted_data: JSON.parse(JSON.stringify(response.extractedData ?? {})),
+        },
+      });
+
+      await prisma.conversation.update({
+        where: { id: conversation.id },
+        data: {
+          metadata: JSON.parse(JSON.stringify({
+            ...conversationMetadata,
+            lastExtractedData: response.extractedData ?? {},
+            lastIntent: response.intent,
+            lastMessageId: userMessageRecord.id,
+            lastAssistantMessageId: assistantMessage.id,
+            detectedRegion: region,
+            regionConfidence,
+            fastPath: classification.intent !== 'needs_gemini',
+          })),
+        },
+      });
+
+      const isReadyForCalculation =
+        response.isReadyForCalculation || hasRequiredDimensions(response.extractedData);
+
+      const data: ChatSendResponse = {
+        conversationId: conversation.id,
+        messageId: userMessageRecord.id,
+        reply: response.reply,
+        isReadyForCalculation,
+        extractedData: response.extractedData,
+        detectedRegion: region,
+        standardsApplied,
+        warnings: response.warnings?.map(w => ({ type: w.type, message: w.message, severity: w.severity })),
+      };
+
+      return NextResponse.json({ success: true, data });
+    }
+
+    // Streaming response:
+    // 1. Extract structured data first (fast, non-streaming JSON call)
+    // 2. Stream natural-language reply (plain text, no JSON visible to user)
+    const stream = new ReadableStream({
+      async start(controller) {
+        let fullReply = '';
+        let extracted: Awaited<ReturnType<NLPService['extractData']>>;
+
+        try {
+          extracted = await nlpService.extractData(message, context);
+        } catch (extractErr) {
+          console.error('Extract data error:', extractErr);
+          extracted = {
+            reply: FALLBACK_REPLY,
+            intent: 'unknown',
+            isReadyForCalculation: false,
+            warnings: [],
+          };
+        }
+
+        try {
+          const generator = nlpService.generateReplyStream(message, context, extracted);
+
+          for await (const chunk of generator) {
+            fullReply += chunk;
+            controller.enqueue(ENCODER.encode(chunk));
+          }
+        } catch (streamErr) {
+          console.error('Reply stream error:', streamErr);
+          const fallback = FALLBACK_REPLY;
+          controller.enqueue(ENCODER.encode(fallback));
+          fullReply = fallback;
+        }
+
+        // Persist assistant message and conversation metadata after stream completes
+        try {
+          const assistantMessage = await prisma.message.create({
+            data: {
+              conversation_id: conversation.id,
+              role: 'assistant',
+              content: fullReply || extracted.reply || FALLBACK_REPLY,
+              extracted_data: JSON.parse(JSON.stringify(extracted.extractedData ?? {})),
+            },
+          });
+
+          await prisma.conversation.update({
+            where: { id: conversation.id },
+            data: {
+              metadata: JSON.parse(JSON.stringify({
+                ...conversationMetadata,
+                lastExtractedData: extracted.extractedData ?? {},
+                lastIntent: extracted.intent,
+                lastMessageId: userMessageRecord.id,
+                lastAssistantMessageId: assistantMessage.id,
+                detectedRegion: region,
+                regionConfidence,
+                fastPath: classification.intent !== 'needs_gemini',
+              })),
+            },
+          });
+        } catch (dbErr) {
+          console.error('DB persist after stream:', dbErr);
+        }
+
+        // Send metadata delimiter + JSON at the end of the stream
+        const isReadyForCalculation =
+          (extracted.isReadyForCalculation || hasRequiredDimensions(extracted.extractedData)) ?? false;
+
+        const metadata: ChatSendResponse = {
+          conversationId: conversation.id,
+          messageId: userMessageRecord.id,
+          reply: fullReply || extracted.reply || FALLBACK_REPLY,
+          isReadyForCalculation,
+          extractedData: extracted.extractedData,
+          detectedRegion: region,
+          standardsApplied,
+          warnings: extracted.warnings?.map((w) => ({ type: w.type, message: w.message, severity: w.severity })),
+        };
+
+        controller.enqueue(ENCODER.encode(METADATA_DELIMITER + JSON.stringify(metadata)));
+        controller.close();
       },
     });
 
-    await prisma.conversation.update({
-      where: { id: conversation.id },
-      data: {
-        metadata: JSON.parse(JSON.stringify({
-          ...conversationMetadata,
-          lastExtractedData: response.extractedData ?? {},
-          lastIntent: response.intent,
-          lastMessageId: userMessage.id,
-          lastAssistantMessageId: assistantMessage.id,
-        })),
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
       },
-    });
-
-    const data: ChatSendResponse = {
-      conversationId: conversation.id,
-      messageId: userMessage.id,
-      reply: response.reply,
-      isReadyForCalculation: response.isReadyForCalculation,
-      extractedData: response.extractedData,
-    };
-
-    return NextResponse.json({
-      success: true,
-      data,
     });
   } catch (error) {
     console.error('Error en /api/chat/send:', error);
@@ -172,3 +306,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+const FALLBACK_REPLY = 'Disculpa, tuve un problema procesando tu mensaje. ¿Podrías repetirlo?';

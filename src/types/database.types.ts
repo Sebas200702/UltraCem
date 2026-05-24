@@ -22,11 +22,16 @@ export interface Materials {
 }
 
 export interface TechnicalSpecs {
+  product_url?: string;
   resistance_psi?: number;
   setting_time_hours?: number;
   coverage_m2_per_bag?: number;
   cement_content_kg_per_m3?: number;
   water_cement_ratio?: number;
+  presentation_kg?: number;
+  spray_applicable?: boolean;
+  finish_type?: string;
+  fluid?: boolean;
 }
 
 export interface ProductJustification {
@@ -83,6 +88,7 @@ export interface Product {
   technical_specs: TechnicalSpecs;
   price_per_bag_cop: number;
   co2_per_kg: number;
+  product_url?: string | null;
   datasheet_url: string | null;
   is_active: boolean;
   created_at: string;
@@ -113,6 +119,10 @@ export interface CalculationResult {
   metadata: {
     formula_used: string;
     waste_factor: number;
+    region?: string | null;
+    region_label?: string;
+    dosage_adjustment?: string;
+    curing_days_override?: number;
   };
 }
 
@@ -131,3 +141,21 @@ export interface RecommendationOutput {
   co2_saved_kg: number;
   justification: ProductJustification;
 }
+
+export interface SafetyWarning {
+  type: 'resistance' | 'coastal' | 'seismic' | 'curing' | 'sustainability';
+  message: string;
+  standardRef?: string;
+  severity: 'low' | 'medium' | 'high';
+}
+
+export interface RetrievedStandard {
+  id: string;
+  code: string;
+  title: string;
+  content: string;
+  implication: string | null;
+  category: string;
+  region: string | null;
+  structureType: string | null;
+  par
