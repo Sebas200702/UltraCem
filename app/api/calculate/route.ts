@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
-import { MaterialCalculator } from '@/domains/calculation';
-import { formatCalculationSummary } from '@/domains/conversation';
-import { recommend } from '@/domains/recommendation';
+import { MaterialCalculator } from '@/domains/calculation/calculator.service';
+import { recommend } from '@/domains/recommendation/product-matcher.service';
+import { formatCalculationSummary } from '@/domains/conversation/nlp.service';
 import type { CalculateResponse, Calculation, RecommendationOutput } from '@/types';
 import type { Product, ProductCategory, TechnicalSpecs } from '@/types/database.types';
 

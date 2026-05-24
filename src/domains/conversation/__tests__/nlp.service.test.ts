@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NLPService, type ConversationContext } from '@/domains/conversation';
+import { NLPService, ConversationContext } from '../nlp.service';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { Calculation, RecommendationOutput } from '@/types';
+import { Calculation, RecommendationOutput } from '../../../types/database.types';
 
 // Declare the mock with everything self-contained inside the hoisted factory
 vi.mock('@google/generative-ai', () => {
@@ -13,7 +13,6 @@ vi.mock('@google/generative-ai', () => {
   const GoogleGenerativeAIConstructorMock = vi.fn().mockImplementation(function (this: any, apiKey: string) {
     this.apiKey = apiKey;
     this.getGenerativeModel = getGenerativeModelMock;
-    return this;
   });
 
   return {
@@ -71,7 +70,7 @@ describe('NLPService', () => {
       isReadyForCalculation: false,
     });
 
-    const generateContentMock = (nlpService as any).model.generateContent;
+    const generateContentMock = vi.mocked((nlpService as any).model.generateContent);
     generateContentMock.mockResolvedValueOnce({
       response: {
         text: () => mockGeminiResponseText,
@@ -105,7 +104,7 @@ describe('NLPService', () => {
       \`\`\`
     `;
 
-    const generateContentMock = (nlpService as any).model.generateContent;
+    const generateContentMock = vi.mocked((nlpService as any).model.generateContent);
     generateContentMock.mockResolvedValueOnce({
       response: {
         text: () => mockGeminiResponseWithMarkdown,
@@ -122,7 +121,7 @@ describe('NLPService', () => {
   });
 
   it('debe reintentar con backoff exponencial cuando hay un error en la API de Gemini', async () => {
-    const generateContentMock = (nlpService as any).model.generateContent;
+    const generateContentMock = vi.mocked((nlpService as any).model.generateContent);
     
     // Simulate failure on first two tries and success on third
     generateContentMock
@@ -150,7 +149,7 @@ describe('NLPService', () => {
   });
 
   it('debe retornar un mensaje amigable de error y marcar fallback si la llamada falla 3 veces', async () => {
-    const generateContentMock = (nlpService as any).model.generateContent;
+    const generateContentMock = vi.mocked((nlpService as any).model.generateContent);
     
     generateContentMock
       .mockRejectedValueOnce(new Error('Fatal Error 1'))

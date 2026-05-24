@@ -1,4 +1,4 @@
-import { NLPService, type ConversationContext, type NLPResponse } from '@/domains/conversation';
+import { NLPService, type ConversationContext, type NLPResponse } from '@/domains/conversation/nlp.service';
 import type { ChatMessage, Message } from '@/types';
 
 export function getGeminiApiKey(): string {

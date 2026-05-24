@@ -92,26 +92,18 @@ ultracem-materials-calculator/
 │   ├── layout.tsx                # Layout raíz
 │   └── page.tsx                  # Página de inicio
 ├── src/
-│   ├── domains/                  # Lógica de negocio por dominio
-│   │   ├── calculation/
-│   │   │   ├── calculation.service.ts
-│   │   │   ├── calculation.types.ts
-│   │   │   └── index.ts
-│   │   ├── recommendation/
-│   │   │   ├── recommendation.service.ts
-│   │   │   ├── recommendation.types.ts
-│   │   │   └── index.ts
+│   ├── domains/                  # Lógica de negocio (DDD)
+│   │   ├── calculation/          # MaterialCalculator
+│   │   ├── recommendation/       # ProductMatcher
 │   │   └── conversation/
-│   │       ├── conversation.service.ts
-│   │       ├── conversation.types.ts
-│   │       └── index.ts
-│   ├── components/               # UI atómica por feature/componente
-│   │   ├── ui/button/
-│   │   ├── landing/hero-section/
-│   │   ├── chat/chat-container/
-│   │   └── admin/product-form/
-│   ├── store/                    # Zustand por dominio
-│   │   └── chat/chat-store.ts
+│   │       ├── nlp.service.ts    # NLPService (Gemini)
+│   │       └── __tests__/
+│   │           └── nlp.service.test.ts
+│   ├── components/               # UI (diseño atómico)
+│   │   ├── atoms/
+│   │   ├── molecules/
+│   │   └── organisms/
+│   ├── store/                    # Zustand (useChatStore)
 │   ├── lib/                      # Utilidades, errores, rate limiting
 │   └── types/
 │       └── database.types.ts     # Tipos de datos

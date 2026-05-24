@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MaterialCalculator, ValidationError } from '@/domains/calculation';
+import { MaterialCalculator, ValidationError } from '../calculator.service';
 
 describe('MaterialCalculator', () => {
   const calculator = new MaterialCalculator();

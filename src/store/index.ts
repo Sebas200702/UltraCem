@@ -1,1 +1,1 @@
-export * from '@/store/chat';
+export { useChatStore } from './chat.store';
