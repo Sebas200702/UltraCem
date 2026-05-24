@@ -21,21 +21,26 @@ export function ChatMockup() {
 
       <div className="flex min-h-[260px] flex-col gap-2.5 bg-ultracem-gray-100 p-4">
         <div className="bubble-assistant max-w-[82%] self-start shadow-sm">
-          ¡Hola! Soy Vanesa. Cuéntame qué vas a construir y te calculo los
+          ¡Hola🖐️! Soy Vanesa. Cuéntame qué vas a construir y te calculo los
           materiales al instante. 👷
         </div>
         <div className="flex flex-wrap gap-1.5 self-start">
-          {chips.map((chip) => (
+          {chips.map((chip, idx) => (
             <span
               key={chip}
-              className="cursor-default whitespace-nowrap rounded-full border border-ultracem-border bg-ultracem-surface px-3 py-1.5 text-[11px] font-medium text-ultracem-blue"
+              className={
+                idx === 0
+                  ? "cursor-default whitespace-nowrap rounded-full border border-ultracem-border bg-ultracem-blue px-3 py-1.5 text-[11px] font-medium text-white"
+                  : "cursor-default whitespace-nowrap rounded-full border border-ultracem-border bg-ultracem-surface px-3 py-1.5 text-[11px] font-medium text-ultracem-blue"
+              }
             >
               {chip}
             </span>
           ))}
+     
         </div>
         <div className="bubble-user max-w-[82%] self-end">
-          Voy a hacer una placa de 5×4 metros de 12 cm
+          Quiero hacer una placa de 5×4 metros de 12 cm
         </div>
         <div className="max-w-[82%] self-start rounded-2xl rounded-bl-sm bg-ultracem-surface px-4 py-3">
           <div className="flex gap-1">

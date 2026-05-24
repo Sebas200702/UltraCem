@@ -3,7 +3,7 @@ import { UltraCemLogo } from "../ultracem-logo";
 
 export function LandingNav() {
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between bg-ultracem-blue px-6">
+    <nav className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between bg-ultracem-blue px-6 shadow-md">
       <Link href="/" className="flex shrink-0 items-center">
         <UltraCemLogo variant="light" priority className="h-12 w-auto" />
       </Link>

@@ -24,7 +24,7 @@ export function HeroSection() {
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-ultracem-yellow/25 bg-ultracem-yellow/[0.12] px-4 py-1.5">
             <span className="h-[7px] w-[7px] animate-pulse rounded-full bg-ultracem-yellow" />
             <span className="text-xs font-semibold uppercase tracking-wider text-ultracem-yellow">
-              Inteligencia artificial para tu obra
+              La IA que transforma tu obra
             </span>
           </div>
           <h1 className="mb-5 text-[clamp(2rem,4vw,3rem)] font-bold leading-[1.1] tracking-tight text-white">
