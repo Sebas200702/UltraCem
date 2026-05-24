@@ -1,4 +1,5 @@
-import { type Tool } from '@/components/landing/tools-section/tools-section-types';
+import { Calculator, ClipboardList, Leaf, Phone } from "lucide-react";
+import { type Tool } from "@/components/landing/tools-section/tools-section-types";
 
 export const tools: Tool[] = [
   {
@@ -9,6 +10,7 @@ export const tools: Tool[] = [
     href: "/calculadora",
     cta: "Ir a la calculadora",
     external: false,
+    icon: Calculator,
   },
   {
     tag: "Gestion de obras",
@@ -18,6 +20,7 @@ export const tools: Tool[] = [
     href: "/chat",
     cta: "Ver mis obras",
     external: false,
+    icon: ClipboardList,
   },
   {
     tag: "Sostenibilidad",
@@ -27,6 +30,7 @@ export const tools: Tool[] = [
     href: "/chat",
     cta: "Ver impacto",
     external: false,
+    icon: Leaf,
   },
   {
     tag: "Comercial",
@@ -36,5 +40,6 @@ export const tools: Tool[] = [
     href: "https://ultracem.co/cotizar-ultracem/",
     cta: "Cotizar ahora",
     external: true,
+    icon: Phone,
   },
 ];

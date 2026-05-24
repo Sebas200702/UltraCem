@@ -1,3 +1,5 @@
+import { type LucideIcon } from "lucide-react";
+
 export interface Tool {
   tag: string;
   title: string;
@@ -5,4 +7,5 @@ export interface Tool {
   href: string;
   cta: string;
   external: boolean;
+  icon: LucideIcon;
 }

@@ -1,5 +1,6 @@
 import {
   CtaSection,
+  FabBand,
   FlowSection,
   HeroSection,
   LandingFooter,
@@ -18,6 +19,7 @@ export default function Home() {
         <CtaSection />
       </main>
       <LandingFooter />
+      <FabBand />
     </>
   );
 }

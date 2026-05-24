@@ -191,6 +191,11 @@ export function useChatContainer() {
     await sendMessage(content);
   };
 
+  const handleQuickStart = (prompt: string) => {
+    setHasStarted(true);
+    void handleSend(prompt);
+  };
+
   const handleQuickAction = (prompt: string) => {
     handleSend(prompt);
   };
@@ -234,6 +239,7 @@ export function useChatContainer() {
     error,
     handleNewCalculation,
     handleQuickAction,
+    handleQuickStart,
     handleSend,
     handleStart,
     handleVoiceToggle,

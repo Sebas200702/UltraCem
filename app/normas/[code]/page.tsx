@@ -129,7 +129,7 @@ export default async function StandardDetailPage({
                   Etiquetas
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {standard.tags.map((tag) => (
+                  {standard.tags.map((tag: string) => (
                     <span
                       key={tag}
                       className="rounded-full bg-ultracem-gray-100 px-3 py-1 text-caption font-semibold text-ultracem-gray-700"

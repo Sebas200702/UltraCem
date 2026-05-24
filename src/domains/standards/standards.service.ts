@@ -80,7 +80,7 @@ export class StandardsService {
     if (exact.length >= 3) return exact as unknown as RetrievedStandard[];
 
     // top-up with generic "todos" standards to always have something useful in the prompt.
-    const exactIds = exact.map((s) => s.id);
+    const exactIds = exact.map((s: { id: string }) => s.id);
     const fallback = await this.prisma.constructionStandard.findMany({
       where: { region: 'todos', id: { notIn: exactIds } },
       orderBy: { priority: 'desc' },

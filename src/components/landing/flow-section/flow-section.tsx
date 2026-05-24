@@ -10,6 +10,7 @@ export function FlowSection() {
   return (
     <Section id="ejemplos" tone="light">
       <Eyebrow className="mb-4">Ejemplo real</Eyebrow>
+      <div className="mb-5 h-1 w-24 rounded-full bg-ultracem-yellow" />
       <h2 className="mb-3 max-w-[620px] text-h1 text-ultracem-gray-900 md:text-display">
         Asi le puedes hablar a Vanesa
       </h2>
@@ -26,15 +27,26 @@ export function FlowSection() {
               type="button"
               onClick={() => setActiveIndex(index)}
               className={cn(
-                "rounded-uc-card border p-5 text-left transition-colors",
+                "group rounded-uc-card border p-5 text-left transition-all duration-200",
                 activeIndex === index
-                  ? "border-ultracem-blue bg-ultracem-blue/5"
-                  : "border-ultracem-gray-100 bg-ultracem-surface hover:border-ultracem-blue/40",
+                  ? "border-ultracem-blue bg-ultracem-blue/5 shadow-uc-card"
+                  : "border-ultracem-gray-100 bg-ultracem-surface hover:-translate-y-0.5 hover:border-ultracem-blue/40 hover:shadow-uc-card",
               )}
             >
-              <p className="mb-2 text-caption font-semibold uppercase tracking-wider text-ultracem-blue">
-                {example.tag}
-              </p>
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-caption font-semibold uppercase tracking-wider text-ultracem-blue">
+                  {example.tag}
+                </p>
+                <span
+                  aria-hidden
+                  className={cn(
+                    "h-1.5 w-6 rounded-full transition-colors",
+                    activeIndex === index
+                      ? "bg-ultracem-yellow"
+                      : "bg-ultracem-gray-100 group-hover:bg-ultracem-yellow/50",
+                  )}
+                />
+              </div>
               <p className="text-body-sm italic text-ultracem-gray-900">
                 {example.message}
               </p>
@@ -42,7 +54,7 @@ export function FlowSection() {
           ))}
         </div>
 
-        <Card className="sticky top-20">
+        <Card className="md:sticky md:top-24">
           <p className="mb-4 text-caption font-semibold uppercase tracking-wider text-ultracem-gray-600">
             Resultado estimado
           </p>

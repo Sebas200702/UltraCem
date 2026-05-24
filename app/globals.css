@@ -233,13 +233,37 @@
     animation: voice-ring 1.4s ease-out 0.4s infinite;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .animate-float,
-    .animate-fade-up,
-    .animate-typing-dot,
-    .animate-voice-ring-1,
-    .animate-voice-ring-2 {
-      animation: none;
-    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-slide-in-right,
+  .animate-slide-in-left,
+  .animate-fade-in-up,
+  .animate-draw-line,
+  .animate-pulse-mechanical,
+  .animate-pulse-mechanical-delay-1,
+  .animate-pulse-mechanical-delay-2,
+  .animate-float,
+  .animate-fade-up,
+  .animate-typing-dot,
+  .animate-voice-ring-1,
+  .animate-voice-ring-2 {
+    animation: none !important;
+  }
+
+  .stagger-1,
+  .stagger-2,
+  .stagger-3,
+  .stagger-4,
+  .stagger-5 {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

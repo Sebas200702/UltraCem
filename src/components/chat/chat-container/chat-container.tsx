@@ -11,6 +11,43 @@ import { WelcomeScreen } from '@/components/chat/welcome-screen';
 import { QUICK_ACTIONS } from '@/components/chat/chat-container/chat-container-data';
 import { useChatContainer } from '@/components/chat/chat-container/use-chat-container';
 
+type StatusToken = {
+  readonly label: string;
+  readonly dotClass: string;
+  readonly badgeClass: string;
+};
+
+function getStatusToken(state: string): StatusToken | null {
+  switch (state) {
+    case 'listening':
+      return {
+        label: 'LIVE',
+        dotClass: 'bg-red-400 animate-pulse',
+        badgeClass: 'bg-red-500/20 text-white',
+      };
+    case 'connecting':
+      return {
+        label: 'Conectando',
+        dotClass: 'bg-ultracem-yellow animate-spin',
+        badgeClass: 'bg-ultracem-yellow/20 text-white',
+      };
+    case 'thinking':
+    case 'speaking':
+      return {
+        label: 'Voz activa',
+        dotClass: 'bg-ultracem-green animate-pulse',
+        badgeClass: 'bg-ultracem-green/20 text-white',
+      };
+    case 'disconnected':
+    default:
+      return {
+        label: 'En linea',
+        dotClass: 'bg-ultracem-green',
+        badgeClass: 'bg-white/10 text-white/85',
+      };
+  }
+}
+
 export function ChatContainer() {
   const {
     calculationData,
@@ -18,6 +55,7 @@ export function ChatContainer() {
     error,
     handleNewCalculation,
     handleQuickAction,
+    handleQuickStart,
     handleSend,
     handleStart,
     handleVoiceToggle,
@@ -29,51 +67,37 @@ export function ChatContainer() {
     scrollRef,
   } = useChatContainer();
 
-  const isLiveActive =
-    liveState === 'listening' || liveState === 'thinking' || liveState === 'speaking' || liveState === 'connecting';
+  const status = getStatusToken(liveState);
 
   return (
     <div className="flex h-[100dvh] flex-col bg-ultracem-surface-muted">
       <header className="relative z-10 flex items-center justify-between border-b border-white/10 bg-ultracem-blue px-4 py-3 shadow-uc-card md:px-6">
         <div className="flex items-center gap-3">
           <Link href="/" aria-label="Volver al inicio" className="shrink-0">
-            <UltraCemLogo variant="light" priority className="h-12 w-auto" />
+            <UltraCemLogo variant="light" priority className="h-10 w-auto md:h-12" />
           </Link>
-          <div>
+          <div className="hidden flex-col sm:flex">
             <p className="text-caption font-medium uppercase tracking-widest text-ultracem-yellow">
               Calculadora de materiales
             </p>
-            <p className="hidden text-caption text-white/65 sm:block">
-              Asistente Vanesa
-            </p>
+            <p className="text-caption text-white/65">Asistente Vanesa</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {liveState === 'listening' && (
-            <span className="flex items-center gap-1.5 rounded-full bg-red-500/20 px-2.5 py-1 text-caption font-semibold text-white animate-pulse">
-              <span className="h-2 w-2 rounded-full bg-red-400" />
-              LIVE
+          {status && (
+            <span
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-caption font-semibold ${status.badgeClass}`}
+            >
+              <span className={`h-2 w-2 rounded-full ${status.dotClass}`} />
+              {status.label}
             </span>
           )}
-          {liveState === 'connecting' && (
-            <span className="flex items-center gap-1.5 rounded-full bg-ultracem-yellow/20 px-2.5 py-1 text-caption font-semibold text-white">
-              <span className="h-2 w-2 rounded-full bg-ultracem-yellow animate-spin" />
-              Conectando
-            </span>
-          )}
-          {isLiveActive && liveState !== 'listening' && liveState !== 'connecting' && (
-            <span className="flex items-center gap-1.5 rounded-full bg-ultracem-green/20 px-2.5 py-1 text-caption font-semibold text-white">
-              <span className="h-2 w-2 rounded-full bg-ultracem-green" />
-              Voz
-            </span>
-          )}
-          <span className="hidden text-caption text-white/70 sm:inline">
-            Tiempo estimado: &lt;90s
+          <span className="hidden text-caption text-white/65 md:inline">
+            &lt; 90s
           </span>
-          <div className="h-2 w-2 animate-pulse rounded-full bg-ultracem-green" />
           <Link
             href="/"
-            className="ml-2 inline-flex h-9 items-center gap-2 rounded-uc-button border border-white/15 bg-white/10 px-3 text-caption font-semibold text-white transition-colors hover:bg-white/15"
+            className="ml-1 inline-flex h-9 items-center gap-2 rounded-uc-button border border-white/15 bg-white/10 px-3 text-caption font-semibold text-white transition-colors hover:bg-white/15"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">Inicio</span>
@@ -83,14 +107,14 @@ export function ChatContainer() {
 
       <div className="relative flex-1 overflow-hidden">
         {!hasStarted ? (
-          <WelcomeScreen onStart={handleStart} />
+          <WelcomeScreen onStart={handleStart} onQuickStart={handleQuickStart} />
         ) : (
           <div className="flex h-full flex-col">
             <div
               ref={scrollRef}
               className="flex-1 overflow-y-auto bg-ultracem-surface-muted px-4 py-6 md:px-6"
             >
-              <div className="mx-auto max-w-2xl space-y-5">
+              <div className="mx-auto max-w-2xl space-y-5 pb-24 sm:pb-6">
                 {displayMessages.map((msg, index) => (
                   <MessageBubble key={msg.id} message={msg} index={index} />
                 ))}

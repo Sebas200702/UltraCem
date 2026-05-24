@@ -372,7 +372,7 @@ export function CalculationResult({
           </div>
         </div>
 
-        <div className="relative flex flex-col gap-2 border-t border-ultracem-gray-100 px-5 py-4 sm:flex-row">
+        <div className="hidden flex-col gap-2 border-t border-ultracem-gray-100 px-5 py-4 sm:flex sm:flex-row">
           <a
             href={data.product.datasheet_url || "#"}
             target="_blank"
@@ -401,6 +401,40 @@ export function CalculationResult({
             <span>Nuevo cálculo</span>
           </button>
         </div>
+      </div>
+
+      <div className="sticky bottom-0 z-30 mt-3 grid grid-cols-3 gap-2 rounded-uc-card border border-ultracem-blue/15 bg-ultracem-surface/95 p-2 shadow-uc-modal backdrop-blur sm:hidden">
+        <a
+          href={data.product.datasheet_url || "#"}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Ver ficha tecnica"
+          className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-uc-button bg-ultracem-yellow px-2 text-button text-ultracem-blue transition-colors hover:bg-ultracem-yellow-hover ${
+            !data.product.datasheet_url ? "pointer-events-none opacity-50" : ""
+          }`}
+        >
+          <FileText className="h-4 w-4" />
+          <span className="text-caption font-semibold">Ficha</span>
+        </a>
+        <a
+          href="https://b2b.ultracem.co/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Cotizar ahora"
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-uc-button bg-ultracem-blue px-2 text-button text-white transition-colors hover:bg-ultracem-blue-dark"
+        >
+          <ArrowRight className="h-4 w-4" />
+          <span className="text-caption font-semibold">Cotizar</span>
+        </a>
+        <button
+          type="button"
+          onClick={onNewCalculation}
+          aria-label="Nuevo calculo"
+          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-uc-button border-2 border-ultracem-blue px-2 text-button text-ultracem-blue transition-colors hover:bg-ultracem-blue hover:text-white"
+        >
+          <RotateCcw className="h-4 w-4" />
+          <span className="text-caption font-semibold">Nuevo</span>
+        </button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 export * from '@/components/landing/chat-mockup';
 export * from '@/components/landing/cta-section';
+export * from '@/components/landing/fab-band';
 export * from '@/components/landing/flow-section';
 export * from '@/components/landing/hero-section';
 export * from '@/components/landing/landing-footer';
