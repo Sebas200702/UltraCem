@@ -40,6 +40,7 @@ export function CalculationResult({
   const hasStandards = data.standardsApplied && data.standardsApplied.length > 0;
   const hasWarnings = data.warnings && data.warnings.length > 0;
   const hasFormula = data.formulaUsed || data.wasteFactor;
+  const productUrl = data.product.product_url;
 
   return (
     <div className="animate-fade-in-up">
@@ -297,9 +298,20 @@ export function CalculationResult({
           </p>
           <div className="rounded-lg border-2 border-ultracem-yellow/30 bg-ultracem-yellow/5 p-4">
             <div className="mb-2 flex items-center justify-between">
-              <h4 className="text-body font-bold text-ultracem-gray-900">
-                {data.product.name}
-              </h4>
+              {productUrl ? (
+                <a
+                  href={productUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-body font-bold text-ultracem-gray-900 hover:text-ultracem-blue hover:underline"
+                >
+                  {data.product.name}
+                </a>
+              ) : (
+                <h4 className="text-body font-bold text-ultracem-gray-900">
+                  {data.product.name}
+                </h4>
+              )}
               <span className="rounded bg-ultracem-blue px-2 py-0.5 text-caption font-bold uppercase tracking-wider text-white">
                 {data.product.sku}
               </span>

@@ -158,4 +158,6 @@ export interface RetrievedStandard {
   category: string;
   region: string | null;
   structureType: string | null;
-  par
+  parameters: Record<string, unknown>;
+  source: string;
+}

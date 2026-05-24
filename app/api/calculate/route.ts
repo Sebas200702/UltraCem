@@ -99,20 +99,25 @@ export async function POST(request: NextRequest) {
       where: { is_active: true },
     });
 
-    const mappedProducts: Product[] = products.map((p) => ({
-      id: p.id,
-      sku: p.sku,
-      name: p.name,
-      category: p.category as ProductCategory,
-      subcategory: p.subcategory,
-      technical_specs: p.technical_specs as TechnicalSpecs,
-      price_per_bag_cop: Number(p.price_per_bag_cop),
-      co2_per_kg: Number(p.co2_per_kg),
-      datasheet_url: p.datasheet_url,
-      is_active: p.is_active,
-      created_at: p.created_at.toISOString(),
-      updated_at: p.updated_at.toISOString(),
-    }));
+    const mappedProducts: Product[] = products.map((p) => {
+      const technicalSpecs = p.technical_specs as TechnicalSpecs;
+
+      return {
+        id: p.id,
+        sku: p.sku,
+        name: p.name,
+        category: p.category as ProductCategory,
+        subcategory: p.subcategory,
+        technical_specs: technicalSpecs,
+        price_per_bag_cop: Number(p.price_per_bag_cop),
+        co2_per_kg: Number(p.co2_per_kg),
+        product_url: technicalSpecs.product_url ?? null,
+        datasheet_url: p.datasheet_url,
+        is_active: p.is_active,
+        created_at: p.created_at.toISOString(),
+        updated_at: p.updated_at.toISOString(),
+      };
+    });
 
     const recommendation = recommend(
       { structureType, materials: result.materials, resistancePsi: effectivePsi },

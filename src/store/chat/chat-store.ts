@@ -252,6 +252,8 @@ export const useChatStore = create<ChatState>()(
                 sku: result.recommendation.product.sku,
                 price_per_bag_cop:
                   result.recommendation.product.price_per_bag_cop,
+                product_url:
+                  result.recommendation.product.product_url ?? null,
                 datasheet_url:
                   result.recommendation.product.datasheet_url ?? null,
               },

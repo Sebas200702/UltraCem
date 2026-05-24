@@ -27,6 +27,7 @@ export interface CalculationData {
     name: string;
     sku: string;
     price_per_bag_cop: number;
+    product_url?: string | null;
     datasheet_url: string | null;
   };
   quantity_bags: number;
