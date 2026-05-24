@@ -43,7 +43,7 @@ export class NLPService {
 
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({
-      model: 'gemini-3.1-flash-latest',
+      model: 'gemini-3.1-flash-lite',
       generationConfig: {
         temperature: 0.3,
         maxOutputTokens: 500,
