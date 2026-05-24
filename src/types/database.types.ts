@@ -140,6 +140,7 @@ export interface RecommendationOutput {
   savings_cop: number;
   co2_saved_kg: number;
   justification: ProductJustification;
+  comparison?: import('@/domains/recommendation/recommendation.types').ComparisonData;
 }
 
 export interface SafetyWarning {

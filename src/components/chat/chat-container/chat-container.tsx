@@ -208,6 +208,17 @@ export function ChatContainer() {
 
   const status = getStatusToken(liveState);
 
+  const lastMessage = displayMessages[displayMessages.length - 1];
+  const awaitingFirstToken =
+    isLoading &&
+    (!lastMessage ||
+      lastMessage.role !== 'assistant' ||
+      !lastMessage.content.trim());
+  const isCalculatingMaterials =
+    isLoading &&
+    !awaitingFirstToken &&
+    Boolean(lastMessage?.role === 'assistant' && lastMessage.content.trim());
+
   return (
     <div className="flex h-[100dvh] flex-col bg-ultracem-surface-muted">
       <header className="relative z-10 flex items-center justify-between border-b border-white/10 bg-ultracem-blue px-4 py-3 shadow-uc-card md:px-6">
@@ -257,16 +268,14 @@ export function ChatContainer() {
                 {displayMessages.map((msg, index) => (
                   <MessageBubble key={msg.id} message={msg} index={index} />
                 ))}
-                {isLoading && (
+                {awaitingFirstToken && (
                   <div className="animate-slide-in-left">
-                    <TypingIndicator />
+                    <TypingIndicator label="Escribiendo..." />
                   </div>
                 )}
-                {error && (
-                  <div className="flex justify-center">
-                    <div className="max-w-[80%] rounded-full bg-red-50 px-4 py-2 text-center text-caption text-red-700 animate-fade-in-up">
-                      {error}
-                    </div>
+                {isCalculatingMaterials && (
+                  <div className="animate-slide-in-left">
+                    <TypingIndicator label="Calculando materiales..." />
                   </div>
                 )}
                 {calculationData && (
@@ -274,6 +283,13 @@ export function ChatContainer() {
                     data={calculationData}
                     onNewCalculation={handleNewCalculation}
                   />
+                )}
+                {error && (
+                  <div className="flex justify-center">
+                    <div className="max-w-[80%] rounded-full bg-red-50 px-4 py-2 text-center text-caption text-red-700 animate-fade-in-up">
+                      {error}
+                    </div>
+                  </div>
                 )}
                 <div className="h-4" />
               </div>

@@ -10,6 +10,7 @@ import {
   TreePine,
   Wallet,
 } from "lucide-react";
+import { ComparisonPanel } from "@/components/calculator/comparison-panel";
 import { type CalculationResultProps } from '@/components/chat/calculation-result/calculation-result-types';
 
 function formatCurrency(value: number) {
@@ -380,6 +381,8 @@ export function CalculationResult({
           </div>
         </div>
 
+        {data.comparison && <ComparisonPanel data={data.comparison} />}
+
         <div className="hidden flex-col gap-2 border-t border-ultracem-gray-100 px-5 py-4 sm:flex sm:flex-row">
           <a
             href={data.product.datasheet_url || "#"}
@@ -411,7 +414,7 @@ export function CalculationResult({
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-30 mt-3 grid grid-cols-3 gap-2 rounded-uc-card border border-ultracem-blue/15 bg-ultracem-surface/95 p-2 shadow-uc-modal backdrop-blur sm:hidden">
+      <div className="mt-3 grid grid-cols-3 gap-2 rounded-uc-card border border-ultracem-blue/15 bg-ultracem-surface/95 p-2 shadow-uc-modal sm:hidden">
         <a
           href={data.product.datasheet_url || "#"}
           target="_blank"

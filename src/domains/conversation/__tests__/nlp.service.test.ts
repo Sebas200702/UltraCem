@@ -56,8 +56,10 @@ describe('NLPService', () => {
     expect(GoogleGenerativeAI).toHaveBeenCalledWith('dummy-api-key');
     
     // Check that getGenerativeModel was called on the mock instance
-    const mockModel = (nlpService as any).model;
-    expect(mockModel).toBeDefined();
+    const extractModel = (nlpService as any).extractModel;
+    const replyModel = (nlpService as any).replyModel;
+    expect(extractModel).toBeDefined();
+    expect(replyModel).toBeDefined();
   });
 
   it('debe procesar un mensaje con respuesta JSON válida y retornar un NLPResponse mapeado', async () => {
@@ -70,7 +72,7 @@ describe('NLPService', () => {
       isReadyForCalculation: false,
     });
 
-    const generateContentMock = vi.mocked((nlpService as any).model.generateContent);
+    const generateContentMock = vi.mocked((nlpService as any).extractModel.generateContent);
     generateContentMock.mockResolvedValueOnce({
       response: {
         text: () => mockGeminiResponseText,
@@ -104,7 +106,7 @@ describe('NLPService', () => {
       \`\`\`
     `;
 
-    const generateContentMock = vi.mocked((nlpService as any).model.generateContent);
+    const generateContentMock = vi.mocked((nlpService as any).extractModel.generateContent);
     generateContentMock.mockResolvedValueOnce({
       response: {
         text: () => mockGeminiResponseWithMarkdown,
@@ -121,7 +123,7 @@ describe('NLPService', () => {
   });
 
   it('debe reintentar con backoff exponencial cuando hay un error en la API de Gemini', async () => {
-    const generateContentMock = vi.mocked((nlpService as any).model.generateContent);
+    const generateContentMock = vi.mocked((nlpService as any).extractModel.generateContent);
     
     // Simulate failure on first two tries and success on third
     generateContentMock
@@ -149,7 +151,7 @@ describe('NLPService', () => {
   });
 
   it('debe retornar un mensaje amigable de error y marcar fallback si la llamada falla 3 veces', async () => {
-    const generateContentMock = vi.mocked((nlpService as any).model.generateContent);
+    const generateContentMock = vi.mocked((nlpService as any).extractModel.generateContent);
     
     generateContentMock
       .mockRejectedValueOnce(new Error('Fatal Error 1'))

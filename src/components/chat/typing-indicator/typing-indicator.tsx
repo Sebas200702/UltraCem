@@ -2,7 +2,7 @@
 
 import { UltraCemLogo } from "@/components/brand";
 
-export function TypingIndicator() {
+export function TypingIndicator({ label = 'Escribiendo...' }: { label?: string }) {
   return (
     <div className="flex items-start gap-3">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ultracem-blue shadow-sm">
@@ -23,7 +23,7 @@ export function TypingIndicator() {
             ))}
           </div>
           <span className="text-caption uppercase tracking-wider text-ultracem-gray-600">
-            Calculando...
+            {label}
           </span>
         </div>
       </div>

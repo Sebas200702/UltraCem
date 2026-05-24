@@ -18,6 +18,29 @@ export interface CostAnalysis {
   co2_saved_kg: number;
 }
 
+export interface ComparisonData {
+  ultracem: {
+    productName: string;
+    sacos: number;
+    precioSaco: number;
+    costoBase: number;
+    wasteFactor: number;
+    costoFinal: number;
+    co2Total: number;
+  };
+  generico: {
+    precioSaco: number;
+    costoBase: number;
+    wasteFactor: number;
+    costoFinal: number;
+    co2Total: number;
+  };
+  ahorroPesos: number;
+  ahorroCO2Kg: number;
+  ahorroPorc: number;
+  wasteFactorBase: number;
+}
+
 export interface RecommendationResult {
   product: Product;
   quantity_bags: number;
@@ -25,4 +48,5 @@ export interface RecommendationResult {
   savings_cop: number;
   co2_saved_kg: number;
   justification: ProductJustification;
+  comparison: ComparisonData;
 }

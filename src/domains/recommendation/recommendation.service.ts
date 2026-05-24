@@ -1,5 +1,10 @@
 import type { StructureType, Product, Materials, ProductJustification } from '@/types/database.types';
-import type { CostAnalysis, RecommendationInput, RecommendationResult } from '@/domains/recommendation/recommendation.types';
+import type {
+  ComparisonData,
+  CostAnalysis,
+  RecommendationInput,
+  RecommendationResult,
+} from '@/domains/recommendation/recommendation.types';
 
 const CATEGORY_MAP: Record<StructureType, string> = {
   slab: 'structural',
@@ -18,13 +23,15 @@ const SUBCATEGORY_MAP: Record<StructureType, string> = {
 export function scoreProduct(product: Product, input: RecommendationInput): number {
   let score = 0;
 
+  const effectivePsi = input.resistancePsi > 0 ? input.resistancePsi : 3000;
+
   if (product.category === CATEGORY_MAP[input.structureType]) {
     score += 40;
   }
 
   const resistance = product.technical_specs.resistance_psi;
-  if (resistance !== undefined && input.resistancePsi > 0) {
-    const diff = Math.abs(resistance - input.resistancePsi) / input.resistancePsi;
+  if (resistance !== undefined && effectivePsi > 0) {
+    const diff = Math.abs(resistance - effectivePsi) / effectivePsi;
     if (diff <= 0.2) {
       score += 30;
     } else if (diff <= 0.4) {
@@ -147,9 +154,71 @@ function getTechnicalReason(structureType: StructureType, product: Product): str
   }
 }
 
+export function buildComparisonData(
+  product: Product,
+  materials: Materials,
+  wasteFactor: number,
+  comparablePrices: number[],
+): ComparisonData {
+  const sacos = materials.cement_bags_50kg;
+  const specs = (product.technical_specs ?? {}) as Record<string, unknown>;
+  const bagWeightKg = Number(specs.presentation_kg) || 50;
+  const ultracemPrecioSaco = Math.round(Number(product.price_per_bag_cop) || 0);
+
+  const validComparables = comparablePrices.filter(
+    (price) => Number.isFinite(price) && price > ultracemPrecioSaco,
+  );
+  const genericoPrecioSaco =
+    validComparables.length > 0
+      ? Math.round(Math.max(...validComparables))
+      : Math.round(ultracemPrecioSaco * 1.15);
+
+  const ultracemCostoBase = Math.round(sacos * ultracemPrecioSaco);
+  const genericoCostoBase = Math.round(sacos * genericoPrecioSaco);
+  const ultracemWasteFactor = wasteFactor;
+  const genericoWasteFactor = wasteFactor * 1.3;
+  const ultracemCostoFinal = Math.round(ultracemCostoBase * ultracemWasteFactor);
+  const genericoCostoFinal = Math.round(genericoCostoBase * genericoWasteFactor);
+  const ultracemCo2Total =
+    Math.round(sacos * bagWeightKg * Number(product.co2_per_kg) * 10) / 10;
+  const genericoCo2Total = Math.round(sacos * bagWeightKg * 0.95 * 10) / 10;
+
+  const ahorroPesos = Math.round(genericoCostoFinal - ultracemCostoFinal);
+  const ahorroCO2Kg =
+    Math.round((genericoCo2Total - ultracemCo2Total) * 10) / 10;
+  const ahorroPorc =
+    genericoCostoFinal > 0
+      ? Math.round((ahorroPesos / genericoCostoFinal) * 1000) / 10
+      : 0;
+
+  return {
+    ultracem: {
+      productName: product.name,
+      sacos,
+      precioSaco: ultracemPrecioSaco,
+      costoBase: ultracemCostoBase,
+      wasteFactor: ultracemWasteFactor,
+      costoFinal: ultracemCostoFinal,
+      co2Total: ultracemCo2Total,
+    },
+    generico: {
+      precioSaco: genericoPrecioSaco,
+      costoBase: genericoCostoBase,
+      wasteFactor: genericoWasteFactor,
+      costoFinal: genericoCostoFinal,
+      co2Total: genericoCo2Total,
+    },
+    ahorroPesos,
+    ahorroCO2Kg,
+    ahorroPorc,
+    wasteFactorBase: wasteFactor,
+  };
+}
+
 export function recommend(
   input: RecommendationInput,
-  products: Product[]
+  products: Product[],
+  wasteFactor: number,
 ): RecommendationResult | null {
   const product = findBestProduct(products, input);
   if (!product) return null;
@@ -162,6 +231,12 @@ export function recommend(
 
   const costAnalysis = calculateCostAnalysis(product, input.materials, input.structureType, comparablePrices);
   const justification = generateJustification(product, input, costAnalysis);
+  const comparison = buildComparisonData(
+    product,
+    input.materials,
+    wasteFactor,
+    comparablePrices,
+  );
 
   return {
     product,
@@ -170,5 +245,6 @@ export function recommend(
     savings_cop: costAnalysis.savings_cop,
     co2_saved_kg: costAnalysis.co2_saved_kg,
     justification,
+    comparison,
   };
 }

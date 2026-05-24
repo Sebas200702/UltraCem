@@ -59,7 +59,7 @@ class MaterialCalculator {
 
     if (region) {
       const info = getRegionInfo(region);
-      wasteFactor += info.wasteFactorOffset;
+      wasteFactor = wasteFactor * (1 + info.wasteFactorOffset);
     }
 
     const adjustedVolume = volume * wasteFactor;

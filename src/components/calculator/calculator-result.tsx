@@ -10,7 +10,9 @@ import {
   TreePine,
   Wallet,
 } from "lucide-react";
+import { ComparisonPanel } from "@/components/calculator/comparison-panel";
 import { usePDFDownload } from "@/components/calculator/use-pdf-download";
+import type { ComparisonData } from "@/domains/recommendation/recommendation.types";
 
 export interface CalculatorResultData {
   volume_m3: number;
@@ -36,6 +38,7 @@ export interface CalculatorResultData {
     economic_reason: string;
     environmental_reason?: string;
   };
+  comparison?: ComparisonData;
 }
 
 interface CalculatorResultProps {
@@ -228,6 +231,8 @@ export function CalculatorResult({ data, onReset }: CalculatorResultProps) {
           </div>
         </div>
 
+        {data.comparison && <ComparisonPanel data={data.comparison} />}
+
         <div className="relative flex flex-col gap-2 border-t border-ultracem-gray-100 px-5 py-4 sm:flex-row">
           <button
             onClick={downloadPDF}
@@ -246,18 +251,25 @@ export function CalculatorResult({ data, onReset }: CalculatorResultProps) {
               </>
             )}
           </button>
-          <a
-            href={data.product.datasheet_url || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`inline-flex flex-1 items-center justify-center gap-2 rounded-uc-button border border-ultracem-gray-200 bg-ultracem-surface px-4 py-3 text-caption font-semibold text-ultracem-gray-700 transition-colors hover:bg-ultracem-gray-50 ${
-              !data.product.datasheet_url ? "pointer-events-none opacity-50" : ""
-            }`}
-            aria-disabled={!data.product.datasheet_url}
-          >
-            <FileText className="h-4 w-4" />
-            <span>Ver ficha técnica</span>
-          </a>
+          {data.product.datasheet_url ? (
+            <a
+              href={data.product.datasheet_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex flex-1 items-center justify-center gap-2 rounded-uc-button border border-ultracem-gray-200 bg-ultracem-surface px-4 py-3 text-caption font-semibold text-ultracem-gray-700 transition-colors hover:bg-ultracem-gray-50"
+            >
+              <FileText className="h-4 w-4" />
+              <span>Ver ficha técnica</span>
+            </a>
+          ) : (
+            <span
+              aria-disabled="true"
+              className="inline-flex flex-1 cursor-not-allowed items-center justify-center gap-2 rounded-uc-button border border-ultracem-gray-200 bg-ultracem-surface px-4 py-3 text-caption font-semibold text-ultracem-gray-700 opacity-50"
+            >
+              <FileText className="h-4 w-4" />
+              <span>Ver ficha técnica</span>
+            </span>
+          )}
           <a
             href="https://b2b.ultracem.co/"
             target="_blank"

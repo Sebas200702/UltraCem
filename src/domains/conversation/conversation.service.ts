@@ -49,6 +49,19 @@ export function hasRequiredDimensions(
 type GeminiClient = InstanceType<typeof GoogleGenerativeAI>;
 type GeminiModel = ReturnType<GeminiClient['getGenerativeModel']>;
 
+/** Gemini 2.5 counts internal "thinking" tokens against maxOutputTokens — disable for chat. */
+const CHAT_GENERATION_CONFIG = {
+  temperature: 0.3,
+  maxOutputTokens: 1024,
+  thinkingConfig: { thinkingBudget: 0 },
+} as Record<string, unknown>;
+
+const EXTRACT_GENERATION_CONFIG = {
+  temperature: 0.1,
+  maxOutputTokens: 2048,
+  thinkingConfig: { thinkingBudget: 0 },
+} as Record<string, unknown>;
+
 const SUPPORTED_INTENTS = new Set([
   'greeting',
   'dimension_extraction',
@@ -61,7 +74,8 @@ const FALLBACK_REPLY = 'Disculpa, tuve un problema procesando tu mensaje. ¿Podr
 
 export class NLPService {
   readonly genAI: GeminiClient;
-  readonly model: GeminiModel;
+  readonly replyModel: GeminiModel;
+  readonly extractModel: GeminiModel;
 
   constructor(apiKey: string) {
     if (!apiKey) {
@@ -69,12 +83,13 @@ export class NLPService {
     }
 
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({
+    this.replyModel = this.genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 500,
-      },
+      generationConfig: CHAT_GENERATION_CONFIG,
+    });
+    this.extractModel = this.genAI.getGenerativeModel({
+      model: 'gemini-2.5-flash',
+      generationConfig: EXTRACT_GENERATION_CONFIG,
     });
   }
 
@@ -94,7 +109,7 @@ export class NLPService {
     while (attempts < maxAttempts) {
       try {
         attempts += 1;
-        const result = await this.model.generateContent(prompt);
+        const result = await this.extractModel.generateContent(prompt);
         const response = await result.response;
         return this.parseGeminiResponse(response.text(), context);
       } catch (error) {
@@ -136,7 +151,7 @@ export class NLPService {
     while (attempts < maxAttempts) {
       try {
         attempts += 1;
-        const result = await this.model.generateContent(prompt);
+        const result = await this.extractModel.generateContent(prompt);
         const response = await result.response;
         return this.parseGeminiResponse(response.text(), context);
       } catch (error) {
@@ -173,13 +188,23 @@ export class NLPService {
     const prompt = this.buildReplyPrompt(userMessage, context, extractedResult ?? null);
 
     try {
-      const result = await this.model.generateContentStream(prompt);
+      const result = await this.replyModel.generateContentStream(prompt);
 
       for await (const chunk of result.stream) {
-        const text = chunk.text();
-        if (text) {
-          yield text;
+        try {
+          const text = chunk.text();
+          if (text) {
+            yield text;
+          }
+        } catch {
+          // Some chunks are blocked or carry no visible text — skip them.
         }
+      }
+
+      const response = await result.response;
+      const finishReason = response.candidates?.[0]?.finishReason;
+      if (finishReason === 'MAX_TOKENS') {
+        console.warn('[NLP] Reply truncated: MAX_TOKENS (consider raising maxOutputTokens)');
       }
     } catch (error) {
       console.error('Gemini reply stream error:', error);
@@ -353,10 +378,16 @@ Responde de forma natural y amigable. SOLO texto, nunca JSON.`;
         warnings?: SafetyWarning[];
       };
 
-      const mergedDimensions = {
-        ...(context.extractedData.dimensions ?? {}),
-        ...(parsed.extractedData?.dimensions ?? {}),
-      };
+      // Merge dimensions properly - only overwrite with defined values from parsed response
+      const prevDimensions = context.extractedData.dimensions ?? {};
+      const newDimensions = parsed.extractedData?.dimensions ?? {};
+      const mergedDimensions: Record<string, unknown> = { ...prevDimensions };
+      for (const key of Object.keys(newDimensions)) {
+        const value = newDimensions[key];
+        if (value !== undefined) {
+          mergedDimensions[key] = value;
+        }
+      }
 
       const mergedData = {
         ...context.extractedData,
@@ -372,7 +403,7 @@ Responde de forma natural y amigable. SOLO texto, nunca JSON.`;
         Object.keys(mergedData).length > 0 ? (mergedData as Partial<CalculationInput>) : undefined;
 
       const readyFlag =
-        Boolean(parsed.isReadyForCalculation) || hasRequiredDimensions(finalExtractedData);
+        hasRequiredDimensions(finalExtractedData);
 
       return {
         reply: typeof parsed.reply === 'string' ? parsed.reply : text,
