@@ -1,15 +1,11 @@
 import Link from "next/link";
+import { UltraCemLogo } from "../ultracem-logo";
 
 export function LandingNav() {
   return (
     <nav className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between bg-ultracem-blue px-6">
-      <Link href="/" className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ultracem-yellow text-sm font-bold tracking-tight text-ultracem-blue">
-          UC
-        </div>
-        <span className="text-lg font-bold tracking-tight text-white">
-          UltraCem
-        </span>
+      <Link href="/" className="flex shrink-0 items-center">
+        <UltraCemLogo variant="light" priority className="h-12 w-auto" />
       </Link>
       <div className="flex items-center gap-2">
         <Link
