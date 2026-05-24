@@ -1,0 +1,121 @@
+"use client";
+
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { UltraCemLogo } from "@/components/brand";
+import { CalculationResult } from "@/components/chat/calculation-result";
+import { InputBar } from "@/components/chat/input-bar";
+import { MessageBubble } from "@/components/chat/message-bubble";
+import { TypingIndicator } from "@/components/chat/typing-indicator";
+import { WelcomeScreen } from "@/components/chat/welcome-screen";
+import { QUICK_ACTIONS } from '@/components/chat/chat-container/chat-container-data';
+import { useChatContainer } from '@/components/chat/chat-container/use-chat-container';
+
+export function ChatContainer() {
+  const {
+    calculationData,
+    displayMessages,
+    error,
+    handleNewCalculation,
+    handleQuickAction,
+    handleSend,
+    handleStart,
+    hasStarted,
+    isLoading,
+    messages,
+    scrollRef,
+  } = useChatContainer();
+
+  return (
+    <div className="flex h-[100dvh] flex-col bg-ultracem-surface-muted">
+      <header className="relative z-10 flex items-center justify-between border-b border-white/10 bg-ultracem-blue px-4 py-3 shadow-uc-card md:px-6">
+        <div className="flex items-center gap-3">
+          <Link href="/" aria-label="Volver al inicio" className="shrink-0">
+            <UltraCemLogo variant="light" priority className="h-12 w-auto" />
+          </Link>
+          <div>
+            <p className="text-caption font-medium uppercase tracking-widest text-ultracem-yellow">
+              Calculadora de materiales
+            </p>
+            <p className="hidden text-caption text-white/65 sm:block">
+              Asistente Vanesa
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="hidden text-caption text-white/70 sm:inline">
+            Tiempo estimado: &lt;90s
+          </span>
+          <div className="h-2 w-2 animate-pulse rounded-full bg-ultracem-green" />
+          <Link
+            href="/"
+            className="ml-2 inline-flex h-9 items-center gap-2 rounded-uc-button border border-white/15 bg-white/10 px-3 text-caption font-semibold text-white transition-colors hover:bg-white/15"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Inicio</span>
+          </Link>
+        </div>
+      </header>
+
+      <div className="relative flex-1 overflow-hidden">
+        {!hasStarted ? (
+          <WelcomeScreen onStart={handleStart} />
+        ) : (
+          <div className="flex h-full flex-col">
+            <div
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto bg-ultracem-surface-muted px-4 py-6 md:px-6"
+            >
+              <div className="mx-auto max-w-2xl space-y-5">
+                {displayMessages.map((msg, index) => (
+                  <MessageBubble key={msg.id} message={msg} index={index} />
+                ))}
+                {isLoading && (
+                  <div className="animate-slide-in-left">
+                    <TypingIndicator />
+                  </div>
+                )}
+                {error && (
+                  <div className="flex justify-center">
+                    <div className="max-w-[80%] rounded-full bg-red-50 px-4 py-2 text-center text-caption text-red-700 animate-fade-in-up">
+                      {error}
+                    </div>
+                  </div>
+                )}
+                {calculationData && (
+                  <CalculationResult
+                    data={calculationData}
+                    onNewCalculation={handleNewCalculation}
+                  />
+                )}
+                <div className="h-4" />
+              </div>
+            </div>
+
+            {!calculationData && messages.length > 0 && (
+              <div className="border-t border-ultracem-gray-100 bg-ultracem-surface px-4 py-3">
+                <p className="mb-2 text-caption font-semibold uppercase tracking-widest text-ultracem-gray-600">
+                  Proyectos rapidos
+                </p>
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+                  {QUICK_ACTIONS.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={() => handleQuickAction(action.prompt)}
+                      className="flex shrink-0 items-center gap-1.5 rounded-full border border-ultracem-gray-100 bg-ultracem-surface-subtle px-3 py-1.5 text-caption font-medium text-ultracem-gray-900 transition-colors hover:border-ultracem-yellow hover:bg-ultracem-yellow/10"
+                    >
+                      <action.icon className="h-3.5 w-3.5 text-ultracem-blue" />
+                      {action.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <InputBar onSend={handleSend} disabled={isLoading} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

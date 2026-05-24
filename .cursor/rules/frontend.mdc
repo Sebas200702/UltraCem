@@ -1,0 +1,19 @@
+---
+description: UltraCem frontend design system enforcement
+globs:
+  - "app/**/*.tsx"
+  - "src/components/**/*.tsx"
+alwaysApply: false
+---
+
+# UltraCem UI Rules
+
+1. Palette: use only `ultracem-*` tokens declared in `src/lib/design-tokens.ts`. Do not add orange brand colors.
+2. Typography: use only Montserrat. Do not import additional fonts.
+3. Type scale: use `text-display`, `text-h1`, `text-h2`, `text-h3`, `text-body`, `text-body-sm`, `text-caption`, or `text-button`. Avoid arbitrary pixel typography when a token exists.
+4. Radius: use `rounded-uc-button`, `rounded-uc-card`, `rounded-uc-input`, or `rounded-full`. Avoid arbitrary radii when a token exists.
+5. Composition: new sections use `Section` and `Container` from `src/components/ui/`. Buttons use `Button` variants.
+6. Prohibited visual patterns: blueprint grids, corner brackets, technical dashed borders, noise overlays, infinite floating hero cards, purple SaaS gradients, and orange brand palettes.
+7. Motion: keep animation minimal. Allowed patterns are fade/slide entrance animations, typing dots, and short hover color transitions. Respect `prefers-reduced-motion`.
+8. Before creating a component, check `src/components/ui/` and the relevant feature folder.
+9. The visual source of truth is `docs/foundations.md`. If documents conflict, `docs/foundations.md` wins.

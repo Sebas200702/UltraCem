@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { recommend, scoreProduct, calculateCostAnalysis, generateJustification } from '../product-matcher.service';
-import type { Product, RecommendationInput, StructureType, Materials } from '../../../types/database.types';
+import { recommend, scoreProduct, calculateCostAnalysis, generateJustification } from '@/domains/recommendation/recommendation.service';
+import type { Product, RecommendationInput, StructureType, Materials } from '@/types/database.types';
 
 const mockProducts: Product[] = [
   {
