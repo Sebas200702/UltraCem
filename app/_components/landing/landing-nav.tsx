@@ -29,7 +29,7 @@ export function LandingNav() {
           Productos
         </a>
         <Link
-          href="#chat"
+          href="/chat"
           className="rounded-uc-button bg-ultracem-yellow px-[18px] py-2 text-[13px] font-semibold text-ultracem-blue transition-colors hover:bg-ultracem-yellow-hover"
         >
           Abrir chat →
