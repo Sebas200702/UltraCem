@@ -1,5 +1,23 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Message, CalculationInput, Calculation, RecommendationOutput } from '../../types/database.types';
+import type {
+  Calculation,
+  CalculationInput,
+  Message,
+  RecommendationOutput,
+} from '../../types/database.types';
+
+type GeminiClient = InstanceType<typeof GoogleGenerativeAI>;
+type GeminiModel = ReturnType<GeminiClient['getGenerativeModel']>;
+
+const SUPPORTED_INTENTS = new Set([
+  'greeting',
+  'dimension_extraction',
+  'confirmation',
+  'calculation',
+  'unknown',
+]);
+
+const FALLBACK_REPLY = 'Disculpa, tuve un problema procesando tu mensaje. ¿Podrías repetirlo?';
 
 export interface ConversationContext {
   conversationId: string;
@@ -15,26 +33,24 @@ export interface NLPResponse {
 }
 
 export class NLPService {
-  readonly genAI: GoogleGenerativeAI;
-  readonly model: any;
+  readonly genAI: GeminiClient;
+  readonly model: GeminiModel;
 
   constructor(apiKey: string) {
     if (!apiKey) {
       throw new Error('GEMINI_API_KEY is required');
     }
+
     this.genAI = new GoogleGenerativeAI(apiKey);
     this.model = this.genAI.getGenerativeModel({
-      model: 'gemini-3.1-flash',
+      model: 'gemini-3.1-flash-latest',
       generationConfig: {
-        temperature: 0.3, // Lower temperature for more consistent outputs
+        temperature: 0.3,
         maxOutputTokens: 500,
-      }
+      },
     });
   }
 
-  /**
-   * Process user message and extract construction parameters
-   */
   async processMessage(
     userMessage: string,
     context: ConversationContext
@@ -46,47 +62,42 @@ export class NLPService {
 
     while (attempts < maxAttempts) {
       try {
-        attempts++;
-        // Log sanitized prompt details for debugging and performance tracking
-        console.log(`[Gemini Request] Attempt ${attempts}/${maxAttempts} - prompt length: ${prompt.length}`);
-
+        attempts += 1;
         const result = await this.model.generateContent(prompt);
         const response = await result.response;
-        const text = response.text();
-
-        // Log response length to ensure a valid payload is received
-        console.log(`[Gemini Response] Attempt ${attempts}/${maxAttempts} - response length: ${text.length}`);
-
-        return this.parseGeminiResponse(text, context);
+        return this.parseGeminiResponse(response.text(), context);
       } catch (error) {
         console.error(`Gemini API error on attempt ${attempts}/${maxAttempts}:`, error);
 
         if (attempts >= maxAttempts) {
           return {
-            reply: 'Disculpa, tuve un problema procesando tu mensaje. ¿Podrías repetirlo?',
+            reply: FALLBACK_REPLY,
             intent: 'unknown',
             isReadyForCalculation: false,
           };
         }
 
-        // Exponential backoff
-        await new Promise((resolve) => setTimeout(resolve, delay));
+        await this.wait(delay);
         delay *= 2;
       }
     }
 
     return {
-      reply: 'Disculpa, tuve un problema procesando tu mensaje. ¿Podrías repetirlo?',
+      reply: FALLBACK_REPLY,
       intent: 'unknown',
       isReadyForCalculation: false,
     };
+  }
+
+  private async wait(milliseconds: number): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, milliseconds));
   }
 
   private buildPrompt(
     userMessage: string,
     context: ConversationContext
   ): string {
-    const systemPrompt = `Eres el Asistente Virtual de UltraCem, una empresa colombiana de cemento. Tu objetivo es ayudar a maestros de obra a calcular materiales de construcción de forma rápida y precisa.
+    return `Eres el Asistente Virtual de UltraCem, una empresa colombiana de cemento. Tu objetivo es ayudar a maestros de obra a calcular materiales de construcción de forma rápida y precisa.
 
 **CONTEXTO:**
 - Usuario típico: Maestro de obra colombiano con 20+ años de experiencia
@@ -130,7 +141,7 @@ Responde SIEMPRE en este formato JSON:
 ${JSON.stringify(context.extractedData, null, 2)}
 
 **HISTORIAL DE CONVERSACIÓN:**
-${context.messageHistory.slice(-5).map(m => `${m.role}: ${m.content}`).join('\n')}
+${context.messageHistory.slice(-5).map((message) => `${message.role}: ${message.content}`).join('\n')}
 
 **MENSAJE DEL USUARIO:**
 ${userMessage}
@@ -141,8 +152,6 @@ ${userMessage}
 3. Si falta información, pregunta de forma natural
 4. Si tienes toda la info, marca isReadyForCalculation=true
 5. Responde en JSON válido`;
-
-    return systemPrompt;
   }
 
   private parseGeminiResponse(
@@ -150,28 +159,40 @@ ${userMessage}
     context: ConversationContext
   ): NLPResponse {
     try {
-      // Extract JSON from response (handle markdown code blocks)
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      const jsonMatch = /\{[\s\S]*\}/.exec(text);
+
       if (!jsonMatch) {
         throw new Error('No JSON found in response');
       }
 
-      const parsed = JSON.parse(jsonMatch[0]);
+      const parsed = JSON.parse(jsonMatch[0]) as Partial<NLPResponse> & {
+        extractedData?: Partial<CalculationInput>;
+      };
 
-      // Merge extracted data with context
+      const mergedDimensions = {
+        ...(context.extractedData.dimensions ?? {}),
+        ...(parsed.extractedData?.dimensions ?? {}),
+      };
+
       const mergedData = {
         ...context.extractedData,
         ...parsed.extractedData,
+        ...(Object.keys(mergedDimensions).length > 0 ? { dimensions: mergedDimensions } : {}),
       };
 
+      const intent = SUPPORTED_INTENTS.has(parsed.intent ?? '')
+        ? (parsed.intent as NLPResponse['intent'])
+        : 'unknown';
+
       return {
-        reply: parsed.reply,
-        intent: parsed.intent,
-        extractedData: mergedData,
-        isReadyForCalculation: parsed.isReadyForCalculation || false,
+        reply: typeof parsed.reply === 'string' ? parsed.reply : text,
+        intent,
+        extractedData: Object.keys(mergedData).length > 0 ? mergedData : undefined,
+        isReadyForCalculation: Boolean(parsed.isReadyForCalculation),
       };
     } catch (error) {
       console.error('Error parsing Gemini response:', error);
+
       return {
         reply: text,
         intent: 'unknown',
@@ -180,28 +201,36 @@ ${userMessage}
     }
   }
 
-  /**
-   * Generate final calculation summary message
-   */
   generateSummaryMessage(
     calculation: Calculation,
     recommendation: RecommendationOutput
   ): string {
-    const { materials } = calculation;
-    if (!materials) {
-      throw new Error('La estimación no tiene materiales calculados.');
-    }
-    const { product, estimated_cost_cop, savings_cop, co2_saved_kg, justification } = recommendation;
+    return formatCalculationSummary(calculation, recommendation);
+  }
+}
 
-    const formatter = new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      maximumFractionDigits: 0,
-    });
+export function formatCalculationSummary(
+  calculation: Calculation,
+  recommendation: RecommendationOutput
+): string {
+  const { materials } = calculation;
 
-    return `✅ **MATERIALES CALCULADOS**
+  if (!materials) {
+    throw new Error('La estimación no tiene materiales calculados.');
+  }
 
-📐 **Volumen total:** ${calculation.volume_m3 ? calculation.volume_m3.toFixed(2) : '0.00'} m³
+  const { product, estimated_cost_cop, savings_cop, co2_saved_kg, justification } = recommendation;
+  const formatter = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  });
+  const volume = calculation.volume_m3 ?? 0;
+  const datasheetUrl = product.datasheet_url ?? '#';
+
+  return `✅ **MATERIALES CALCULADOS**
+
+📐 **Volumen total:** ${volume.toFixed(2)} m³
 
 📊 **MATERIALES NECESARIOS:**
 -  Cemento: **${materials.cement_bags_50kg} sacos de 50kg**
@@ -213,7 +242,7 @@ ${materials.gravel_m3 ? `• Grava: **${materials.gravel_m3} m³**\n` : ''}-  Ag
 ✅ **PRODUCTO RECOMENDADO:**
 ## ${product.name}
 
-🔗 [Ver ficha técnica](${product.datasheet_url})
+🔗 [Ver ficha técnica](${datasheetUrl})
 
 💡 **POR QUÉ ESTE PRODUCTO:**
 ${justification.technical_reason}
@@ -227,5 +256,4 @@ ${co2_saved_kg > 0 ? `🌱 **BENEFICIO AMBIENTAL:**
 CO₂ evitado: ${Math.round(co2_saved_kg)} kg
 Equivalente a: ${Math.round(co2_saved_kg / 15)} árboles plantados\n` : ''}
 📲 **¿Quieres hacer el pedido?**`;
-  }
 }

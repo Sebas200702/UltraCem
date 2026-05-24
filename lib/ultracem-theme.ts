@@ -41,7 +41,8 @@ export const ultracemColors = {
 };
 
 export const ultracemFontFamily = {
-  sans: ["var(--font-montserrat)", "system-ui", "sans-serif"],
+  sans: ['"Montserrat"', "system-ui", "sans-serif"],
+  display: ['"Bebas Neue"', '"Montserrat"', "system-ui", "sans-serif"],
 };
 
 type FontSizeConfig = [
@@ -107,5 +108,34 @@ export const ultracemThemeExtend = {
   },
   ringColor: {
     "uc-focus": ultracemColors.yellow.bright,
+  },
+  animation: {
+    "slide-in-right": "slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+    "slide-in-left": "slide-in-left 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+    "fade-in-up": "fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+    "draw-line": "draw-line 1.2s cubic-bezier(0.65, 0, 0.35, 1) forwards",
+    "pulse-mechanical": "pulse-mechanical 1.4s ease-in-out infinite",
+  },
+  keyframes: {
+    "slide-in-right": {
+      from: { opacity: "0", transform: "translateX(24px) scale(0.96)" },
+      to: { opacity: "1", transform: "translateX(0) scale(1)" },
+    },
+    "slide-in-left": {
+      from: { opacity: "0", transform: "translateX(-24px) scale(0.96)" },
+      to: { opacity: "1", transform: "translateX(0) scale(1)" },
+    },
+    "fade-in-up": {
+      from: { opacity: "0", transform: "translateY(16px)" },
+      to: { opacity: "1", transform: "translateY(0)" },
+    },
+    "draw-line": {
+      from: { clipPath: "inset(0 100% 0 0)" },
+      to: { clipPath: "inset(0 0 0 0)" },
+    },
+    "pulse-mechanical": {
+      "0%, 100%": { transform: "translateY(0) scale(1)", opacity: "0.4" },
+      "50%": { transform: "translateY(-4px) scale(1.15)", opacity: "1" },
+    },
   },
 };
