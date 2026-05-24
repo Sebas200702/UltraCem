@@ -6,7 +6,7 @@ export const tools: Tool[] = [
     title: "Calculadora de materiales",
     description:
       "Ajusta dimensiones y obten dosificacion detallada para distintos tipos de estructura.",
-    href: "#calculadora",
+    href: "/chat",
     cta: "Ir a la calculadora",
     external: false,
   },
@@ -15,7 +15,7 @@ export const tools: Tool[] = [
     title: "Seguimiento de proyectos",
     description:
       "Crea proyectos, registra avances y prepara informacion para cotizaciones futuras.",
-    href: "#proyectos",
+    href: "/chat",
     cta: "Ver mis obras",
     external: false,
   },
@@ -24,7 +24,7 @@ export const tools: Tool[] = [
     title: "Panel de impacto",
     description:
       "Revisa CO2 evitado, material ahorrado y presupuesto optimizado en tus obras.",
-    href: "#impacto",
+    href: "/chat",
     cta: "Ver impacto",
     external: false,
   },

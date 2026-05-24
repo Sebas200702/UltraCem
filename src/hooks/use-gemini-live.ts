@@ -457,19 +457,38 @@ export function useGeminiLive({
   };
 }
 
-export function parseLiveResponse(text: string): LiveResponse | null {
+function toLiveResponse(
+  parsed: Record<string, unknown>,
+  fallbackText: string,
+): LiveResponse {
+  const extractedData = parsed.extractedData;
+
+  return {
+    reply: typeof parsed.reply === 'string' ? parsed.reply : fallbackText,
+    intent: typeof parsed.intent === 'string' ? parsed.intent : 'unknown',
+    extractedData:
+      typeof extractedData === 'object' && extractedData !== null && !Array.isArray(extractedData)
+        ? (extractedData as Record<string, unknown>)
+        : {},
+    isReadyForCalculation: Boolean(parsed.isReadyForCalculation),
+  };
+}
+
+export function parseLiveResponse(
+  text: string,
+  parsedResponse?: Record<string, unknown> | null,
+): LiveResponse | null {
+  if (parsedResponse) {
+    return toLiveResponse(parsedResponse, text);
+  }
+
   try {
     const jsonMatch = /\{[\s\S]*\}/.exec(text);
     if (!jsonMatch) return null;
 
     const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
 
-    return {
-      reply: (parsed.reply as string) ?? text,
-      intent: (parsed.intent as string) ?? 'unknown',
-      extractedData: (parsed.extractedData as Record<string, unknown>) ?? {},
-      isReadyForCalculation: Boolean(parsed.isReadyForCalculation),
-    };
+    return toLiveResponse(parsed, text);
   } catch {
     return null;
   }

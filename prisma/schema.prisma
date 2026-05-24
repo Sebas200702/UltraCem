@@ -13,6 +13,7 @@ model User {
   phone       String?  @unique @db.VarChar(20)
   name        String?  @db.VarChar(255)
   user_type   String?  @db.VarChar(50)
+  role        String   @default("user") @db.VarChar(20)
   preferences Json     @default("{}")
   created_at  DateTime @default(now()) @db.Timestamptz
   updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz
@@ -123,4 +124,26 @@ model PriceHistory {
   @@index([product_id])
   @@index([created_at])
   @@map("price_history")
+}
+
+model ConstructionStandard {
+  id            String   @id @default(uuid()) @db.Uuid
+  code          String   @unique @db.VarChar(20)
+  title         String   @db.VarChar(255)
+  category      String   @db.VarChar(30)
+  region        String?  @db.VarChar(20)
+  structureType String?  @db.VarChar(20)
+  content       String
+  implication   String?
+  parameters    Json     @default("{}")
+  source        String   @db.VarChar(500)
+  tags          String[]
+  priority      Int      @default(0)
+  createdAt     DateTime @default(now()) @db.Timestamptz
+  updatedAt     DateTime @updatedAt @db.Timestamptz
+
+  @@index([category, structureType])
+  @@index([region])
+  @@index([priority])
+  @@map("construction_standards")
 }

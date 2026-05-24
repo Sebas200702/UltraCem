@@ -2,7 +2,9 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
+  AlertCircle,
   Plus,
   Search,
   Pencil,
@@ -65,9 +67,15 @@ function StatusBadge({ active }: { active: boolean }) {
 }
 
 export default function ProductosPage() {
+  const searchParams = useSearchParams();
+  const showStaleOnly = searchParams.get("stale") === "true";
   const [products, setProducts] = useState<ProductRow[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    type: "error";
+    message: string;
+  } | null>(null);
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -108,13 +116,15 @@ export default function ProductosPage() {
 
       const matchesCategory =
         !categoryFilter || p.category === categoryFilter;
+      const matchesStale = !showStaleOnly || isPriceStale(p.updated_at);
 
-      return matchesSearch && matchesCategory;
+      return matchesSearch && matchesCategory && matchesStale;
     });
-  }, [products, search, categoryFilter]);
+  }, [products, search, categoryFilter, showStaleOnly]);
 
   const handleToggleActive = async (product: ProductRow) => {
     setTogglingId(product.id);
+    setNotification(null);
 
     try {
       const res = await fetch(`/api/products/${product.id}`, {
@@ -136,8 +146,14 @@ export default function ProductosPage() {
           p.id === product.id ? { ...p, is_active: !p.is_active } : p
         )
       );
-    } catch {
-      // Silently fail
+    } catch (err) {
+      setNotification({
+        type: "error",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Error al cambiar el estado del producto.",
+      });
     } finally {
       setTogglingId(null);
     }
@@ -182,13 +198,20 @@ export default function ProductosPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold text-ultracem-gray-900">
-          Productos
+          {showStaleOnly ? "Productos con precios desactualizados" : "Productos"}
         </h1>
         <Link href="/admin/productos/nuevo" className="btn-primary inline-flex items-center gap-2 self-start">
           <Plus className="h-4 w-4" />
           Nuevo producto
         </Link>
       </div>
+
+      {notification && (
+        <div className="mb-6 flex items-center gap-3 rounded-uc-input border border-ultracem-error bg-ultracem-error/5 px-4 py-3 text-sm text-ultracem-error">
+          <AlertCircle className="h-5 w-5 shrink-0" />
+          <span>{notification.message}</span>
+        </div>
+      )}
 
       <div className="mb-6 flex flex-col gap-4 sm:flex-row">
         <div className="relative flex-1">
@@ -214,6 +237,14 @@ export default function ProductosPage() {
             </option>
           ))}
         </select>
+        {showStaleOnly && (
+          <Link
+            href="/admin/productos"
+            className="btn-outline inline-flex items-center justify-center"
+          >
+            Ver todos
+          </Link>
+        )}
       </div>
 
       {filteredProducts.length === 0 ? (
@@ -221,6 +252,8 @@ export default function ProductosPage() {
           <p className="text-sm text-ultracem-gray-600">
             {search || categoryFilter
               ? "No se encontraron productos con los filtros actuales."
+              : showStaleOnly
+                ? "No hay productos con precios desactualizados."
               : "No hay productos registrados."}
           </p>
         </div>

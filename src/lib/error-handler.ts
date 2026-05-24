@@ -2,6 +2,8 @@ export const errorMessages: Record<string, string> = {
   VALIDATION_ERROR: 'Los datos ingresados no son válidos. Por favor verifica e intenta de nuevo.',
   NOT_FOUND: 'No encontramos lo que buscabas. Intenta de nuevo.',
   RATE_LIMIT_EXCEEDED: 'Has superado el límite de consultas. Intenta en unos minutos.',
+  UNAUTHORIZED: 'Debes iniciar sesión para continuar.',
+  FORBIDDEN: 'No tienes permisos para realizar esta acción.',
   CALCULATION_ERROR: 'Hubo un error calculando los materiales. Verifica las dimensiones.',
   NLP_ERROR: 'No pudimos entender tu mensaje. ¿Puedes reformularlo?',
   DATABASE_ERROR: 'Error de conexión. Intenta de nuevo en un momento.',

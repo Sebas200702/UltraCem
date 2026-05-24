@@ -6,6 +6,22 @@ export interface Message {
   isCalculation?: boolean;
 }
 
+export interface AppliedStandard {
+  code: string;
+  title: string;
+  implication: string;
+  sourceUrl: string;
+}
+
+export interface CalculationMeta {
+  formulaUsed?: string;
+  wasteFactor?: number;
+  region?: string | null;
+  regionLabel?: string;
+  standardsApplied?: AppliedStandard[];
+  warnings?: Array<{ type: string; message: string; severity: string }>;
+}
+
 export interface ChatState {
   conversationId: string | null;
   messages: Message[];
@@ -40,8 +56,13 @@ export interface ChatState {
       environmental_reason?: string;
     };
   } | null;
+  calculationMeta: CalculationMeta | null;
+  region: string | null;
+  standardsApplied: AppliedStandard[];
+  warnings: Array<{ type: string; message: string; severity: string }>;
   sendMessage: (content: string) => Promise<void>;
   performCalculation: () => Promise<void>;
+  extractFromVoice: (content: string) => Promise<void>;
   startNewConversation: () => void;
   loadConversation: (id: string) => Promise<void>;
   resetChat: () => void;
