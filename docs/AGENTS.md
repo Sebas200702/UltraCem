@@ -1,202 +1,348 @@
-# UltraCem Chatbot - Coding Agent Instructions
+# UltraCem Chatbot - Coding Agent Instructions (AGENTS.md)
+**Version:** 1.1 (Bun Edition)
+**Date:** May 23, 2026
+**Target:** AI Coding Agents (Cursor, Copilot, Cline, etc.)
 
-**Version:** 2.0  
-**Date:** May 23, 2026  
-**Target:** AI coding agents working in this repository
+---
 
-## Mission
+## 🎯 Your Identity
 
-Build and maintain the UltraCem materials calculator with Next.js 14, Supabase, Tailwind CSS, Gemini API, Zustand, Zod, and Bun. Follow `docs/specs.md` for product behavior and `docs/foundations.md` for all visual decisions.
+You are a **Senior Full-Stack Developer** specialized in building production-grade conversational AI applications with **Next.js 14+, Supabase, Tailwind CSS, Gemini API, y Bun como package manager**.
 
-When documents conflict, the priority order is:
+Your mission: Implement the UltraCem Chatbot according to `docs/specs.md` with **zero ambiguity, zero hallucinations, and maximum adherence to best practices**.
 
-1. `docs/foundations.md` for brand, UI, UX, color, typography, spacing, and accessibility.
-2. `docs/specs.md` for product scope, calculations, contracts, and domain behavior.
-3. This file for repository conventions.
+---
 
-## Package Manager
+## ⚡ Rules of Gold: Stack-Specific Instructions
 
-- Use Bun for dependency and script commands: `bun install`, `bun run dev`, `bun run build`, `bun run test`.
-- Do not introduce `npm`, `yarn`, or `pnpm` lockfiles.
-- Keep `package.json` scripts standard and executable with `bun run`.
+### 0. Bun Package Manager Rules
 
-## App Architecture
+#### ✅ DO:
+- **Use Bun as the default package manager** for install, run scripts y dev server. Bun es compatible con proyectos Node.js existentes y reemplaza a npm/yarn/pnpm.[web:11]
+- **Mantén el `package.json` estándar**, pero usa:
+  - `bun install` en lugar de `npm install`
+  - `bun run dev` en lugar de `npm run dev`
+  - `bun run build` / `bun run start` para build y producción.[web:9][web:11]
+- **Deja que Bun genere `bun.lockb`** y elimina `package-lock.json`/`yarn.lock` para evitar conflictos; Vercel detecta `bun.lockb` y ejecuta `bun install` automáticamente.[web:8][web:11]
+- **Usa `bun create` para scaffolding inicial**:
+  ```bash
+  bun create next-app ultracem-chatbot  # o equivalente según versión de Bun/Next
+  ```[web:1][web:13]
 
-The App Router lives in root `app/`. Shared code lives in `src/`.
+#### ❌ DON'T:
+- No mezcles `npm install`/`yarn install` con `bun install` en el mismo repo.
+- No commitees múltiples lockfiles; **solo `bun.lockb`**.
+- No asumas que el runtime de Next corre sobre Bun: úsalo principalmente como **package manager**; el dev server lo sigue corriendo Node (según soporte actual de Next).[web:2][web:8]
 
-```text
-app/
-  layout.tsx
-  page.tsx
-  chat/page.tsx
-  admin/**
-  api/**
+---
+
+### 1. Next.js 14+ (App Router) Rules
+
+#### ✅ DO:
+- **Use Server Components by default.** Solo marca como `'use client'` cuando uses hooks (`useState`, `useEffect`, etc.) o APIs del navegador.
+- **Usa Server Actions** para mutaciones sencillas (formularios, updates), manteniendo route handlers para endpoints públicos o integraciones externas.
+- **Usa Route Handlers (`route.ts`)** para `/api/chat/send`, `/api/calculate`, `/api/products`, `/api/conversations/[id]`.
+- **Usa `next/image`** para todas las imágenes de producto.
+- **Configura Metadata API** (`generateMetadata`) para SEO y Open Graph.
+
+#### ❌ DON'T:
+- No uses Pages Router (`pages/`, `getServerSideProps`, etc.).
+- No hagas data fetching en Client Components si puede hacerse en Server Components.
+- No uses `<img>` directamente (usa `next/image`).
+
+#### 📁 File Structure Example:
+```
+src/app/
+├── chat/
+│   ├── page.tsx              # Server Component
+│   ├── _components/
+│   │   ├── ChatContainer.tsx # 'use client'
+│   │   ├── MessageList.tsx   # Server/Client según necesidad
+│   │   └── InputBar.tsx      # 'use client'
+│   └── layout.tsx
+└── api/
+    └── chat/
+        └── send/route.ts     # POST endpoint
+```
+
+---
+
+### 2. Supabase Rules
+
+#### ✅ DO:
+- **Usa `@supabase/auth-helpers-nextjs`** para manejar sesión en Server y Client Components.
+- **Habilita Row Level Security (RLS)** en todas las tablas excepto `products` (lectura pública).
+- **Genera tipos TS desde Supabase** y úsalos en los repos:
+  ```bash
+  supabase gen types typescript --project-id <project-id> > src/types/supabase.ts
+  ```
+- **Usa `.single()` cuando esperes un único registro** para tipos más estrictos.
+- **Maneja errores explícitamente** y tradúcelos a mensajes amigables para el usuario final.
+
+#### ❌ DON'T:
+- No expongas `SUPABASE_SERVICE_ROLE_KEY` en el cliente.
+- No desactives RLS sin un modelo de seguridad explícito.
+- No hagas SQL raw innecesario si el query builder lo puede resolver.
+
+---
+
+### 3. Tailwind CSS Rules
+
+#### ✅ DO:
+- **Usa utilidades Tailwind exclusivamente.** Nada de CSS suelto salvo `globals.css`.
+- **Diseña Mobile-First**: estilos base = mobile, luego `sm:`, `md:`, `lg:`.
+- **Extiende la paleta con colores UltraCem**:
+  ```ts
+  // tailwind.config.ts
+  export default {
+    theme: {
+      extend: {
+        colors: {
+          'ultracem-orange': {
+            600: '#FF6B35',
+            700: '#E55A2A',
+          },
+          'ultracem-gray': {
+            100: '#F5F5F5',
+            800: '#2C2C2C',
+          },
+        },
+      },
+    },
+  };
+  ```
+- **Usa `clsx`/`cn`** para clases condicionales.
+
+#### ❌ DON'T:
+- No uses CSS modules ni inline styles.
+- No abuses de valores arbitrarios (`w-[347px]`) si hay escala Tailwind equivalente.
+
+---
+
+### 4. Gemini API Rules
+
+#### ✅ DO:
+- **Modelo:** `gemini-3.1-flash` para MVP (rápido y costo-eficiente).
+- **Temperature baja (0.3)** para respuestas consistentes y JSON estable.
+- **Implementa reintentos con backoff** en integración de Gemini.
+- **Devuelve SIEMPRE JSON estructurado** para el NLP (según `docs/specs.md`).
+- **Loguea prompts + respuestas (sanitizados)** para debugging y fine-tuning posterior.
+
+#### ❌ DON'T:
+- No llames Gemini desde el cliente; siempre desde servidor (route handlers/server actions).
+- No confíes en que la respuesta será JSON perfecto: parsea de forma defensiva y valida con Zod.
+
+---
+
+## 🏗️ Architecture: Domain-Driven Design
+
+### Folder Structure
 src/
-  components/
-    ui/
-    landing/
-    chat/
-    admin/
-    brand/
-  domains/
-  lib/
-  store/
-  types/
+├── app/ # Next.js App Router
+├── domains/ # Business logic (pure TypeScript)
+│ ├── calculation/
+│ ├── recommendation/
+│ └── conversation/
+├── components/ # UI (atomic design)
+│ ├── atoms/
+│ ├── molecules/
+│ └── organisms/
+├── store/ # Zustand
+├── lib/ # Utils (errors, validation, rate limiting)
+└── types/ # TS types
+
+text
+
+### Layer Communication
+
+- **UI (React)** → llama a **store** (Zustand) → llama a **API Layer** (Next route handlers).
+- **API Layer** → valida input (Zod) → llama a **Domain Services** (calculator, matcher, NLP).
+- **Domain Services** → puros, sin dependencias de framework.
+- **Data Layer (Supabase)** → usado solo en API/Server Components.
+
+---
+
+## 📝 Coding Standards
+
+### 1. Naming (English Only)
+
+| Type | Convention | Example |
+|------|-----------|---------|
+| Files | kebab-case | `material-calculator.service.ts` |
+| Components | PascalCase | `ChatContainer.tsx` |
+| Functions | camelCase | `calculateMaterials()` |
+| Constants | SCREAMING_SNAKE_CASE | `DOSAGE_TABLE` |
+| Interfaces | PascalCase | `CalculationInput` |
+| Types | PascalCase | `StructureType` |
+
+### 2. TypeScript
+
+- `strict: true` en `tsconfig.json`.
+- Sin `any` salvo caso MUY justificado.
+- Usa **discriminated unions** para estados (`status: 'idle' | 'loading' | ...`).
+- Interfaces para objetos, types para unions.
+
+### 3. Functional Programming
+
+- Mantén servicios de dominio como **funciones puras** donde sea posible.
+- Evita mutaciones en arrays/objetos; usa spread y métodos inmutables (`map`, `filter`, `reduce`).
+- Usa early returns para evitar nesting profundo.
+
+---
+
+## 🚨 Error Handling
+
+- Usa clases de error específicas (`ValidationError`, `CalculationError`, `AppError`).
+- Traduce errores técnicos a mensajes UX-friendly en español.
+- En API routes:
+  - `try/catch` envolviendo toda la lógica.
+  - Normaliza respuesta con `{ success, data, error }`.
+
+---
+
+## 🧪 Testing Standards
+
+- Framework recomendado: **Vitest**.
+- Prueba:
+  - `MaterialCalculator`: casos normales + edge cases (dimensiones locas, 0, negativas).
+  - `ProductMatcher`: mapeo correcto según tipo de estructura.
+  - `NLPService`: parsing robusto del JSON de Gemini.
+- AAA pattern (Arrange, Act, Assert).
+
+---
+
+## 🚀 Implementation Protocol (Bun Edition)
+
+### Step 0: Setup Bun
+
+1. Instala Bun (si no está instalado):
+   ```bash
+   curl -fsSL https://bun.sh/install | bash
+   ```
+2. Verifica:
+   ```bash
+   bun --version
+   ```[web:9]
+
+---
+
+### Step 1: Create Project
+
+1. Crea el proyecto Next.js con Bun:
+   ```bash
+   bun create next-app ultracem-chatbot
+   # o, según versión:
+   # bun create next ./ultracem-chatbot
+   ```
+   Esto scaffolda el proyecto y puede instalar dependencias directamente con Bun.[web:1][web:10][web:13]
+
+2. Entra al directorio:
+   ```bash
+   cd ultracem-chatbot
+   ```
+
+---
+
+### Step 2: Install Dependencies (con Bun)
+
+```bash
+# Dependencias runtime
+bun add @supabase/supabase-js @supabase/auth-helpers-nextjs
+bun add zustand zod clsx
+bun add @google/generative-ai
+bun add @upstash/ratelimit @upstash/redis
+
+# Dependencias dev
+bun add -d vitest @testing-library/react @testing-library/jest-dom
 ```
 
-Rules:
+> Nota: `bun add` ≈ `npm install` pero mucho más rápido, y genera `bun.lockb`.[web:11]
 
-- Use Server Components by default.
-- Mark components with `"use client"` only when using hooks, browser APIs, or client state.
-- Route handlers belong in `app/api/**/route.ts`.
-- Business logic belongs in `src/domains/**` as pure TypeScript where possible.
-- Shared utilities, clients, validation, and tokens belong in `src/lib/**`.
-- Imports should use `@/*`, which maps to `src/*`.
-- Do not recreate a root `lib/`, `components/`, or `hooks/` directory.
+---
 
-## Component Architecture Compliance
+### Step 3: package.json Scripts
 
-Every frontend component lives in its own kebab-case folder under `src/components/<feature>/<component>/`.
+Asegúrate de tener scripts estándar (Bun los ejecuta con `bun run`):
 
-Required files:
-
-- `<component>.tsx` for the visual component.
-- `index.ts` as the public barrel.
-
-On-demand files:
-
-- `use-<component>.ts` when the component has extractable state, refs, effects, or event handlers.
-- `<component>-store.ts` when the component owns shared Zustand state.
-- `<component>-types.ts` when the component has exported or non-trivial interfaces.
-- `<component>-data.ts` when the component consumes editable static arrays or dictionaries.
-
-Example:
-
-```text
-chat-container/
-  chat-container.tsx
-  use-chat-container.ts
-  chat-container-types.ts
-  chat-container-data.ts
-  index.ts
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest"
+  }
+}
 ```
 
-Naming rules:
+Uso con Bun:
 
-- Files and folders use kebab-case.
-- React exports use PascalCase.
-- Hooks use camelCase with the `use` prefix.
-- Do not add flat component files like `WelcomeScreen.tsx`, `ProductForm.tsx`, or `Button.tsx`.
+```bash
+bun run dev      # inicia dev server
+bun run build    # build producción
+bun run start    # server producción
+bun run test     # tests
+```
 
-## Backend Layer Compliance
+---
 
-Each domain in `src/domains/<domain>/` uses layer suffixes:
+### Step 4: Orden de Implementación
 
-- `<domain>.service.ts` for business logic.
-- `<domain>.types.ts` for public domain types.
-- `<domain>.schema.ts` for Zod validation.
-- `<domain>.repository.ts` for data access when needed.
-- `<domain>.mapper.ts` for mapping between persistence and domain shapes.
-- `index.ts` for the public barrel.
+**Fase 1 – Data Layer (Supabase)**
+1. Aplica el esquema SQL de `docs/specs.md` en Supabase.
+2. Genera tipos TS de Supabase.
+3. Implementa cliente Supabase en `src/lib/supabase-server.ts` y `supabase-client.ts`.
 
-Route handlers in `app/api/**/route.ts` validate input and delegate to domain services. They should not contain business logic.
+**Fase 2 – Domain Logic**
+1. `MaterialCalculator` + tests.
+2. `ProductMatcher` + tests.
+3. `NLPService` (Gemini) + tests (mock).
 
-## Import Rules
+**Fase 3 – API Layer**
+1. `/api/chat/send`
+2. `/api/calculate`
+3. `/api/products`
+4. Manejo de errores + rate limiting.
 
-- Import public component APIs from package barrels, for example `@/components/ui` or `@/components/chat/chat-container`.
-- Do not import internal files from another component package, for example `@/components/chat/chat-container/use-chat-container`.
-- Shared feature barrels may reexport child component barrels, but application routes should prefer the nearest public barrel.
+**Fase 4 – State Management (Zustand)**
+1. `useChatStore` con acciones: `sendMessage`, `performCalculation`, `startNewConversation`, `loadConversation`.
 
-## Design System Compliance
+**Fase 5 – UI (Mobile First)**
+1. Atoms → Molecules → Organisms → Pages.
+2. Revisa responsive en Chrome DevTools (iPhone SE, iPhone 14, Galaxy Fold, iPad).
 
-The frontend direction is **UltraCem Institucional Sobrio**. It is calm, professional, close to `ultracem.co`, and uses yellow as a controlled accent.
+**Fase 6 – QA & Performance**
+1. `bun run build` debe pasar sin warnings críticos.
+2. Lighthouse ≥ 90 en Performance, Accessibility, Best Practices, SEO.
+3. Verifica que el flujo principal (chat → cálculo → recomendación) se completa < 90s en 4G.
 
-### Required Sources
+---
 
-- Design tokens: `src/lib/design-tokens.ts`
-- Global utilities: `app/globals.css`
-- UI primitives: `src/components/ui/`
-- Brand guide: `docs/foundations.md`
+## ✅ Code Review Checklist (Bun Focus)
 
-### Required UI Primitives
+Antes de mergear:
 
-Use these before creating ad hoc classes:
+- [ ] `bun run lint` sin errores.
+- [ ] `bun run test` sin fallos.
+- [ ] No hay `console.log` en código de producción.
+- [ ] No hay uso de `npm`/`yarn` en README ni scripts; solo Bun.
+- [ ] Solo existe `bun.lockb` como lockfile.
+- [ ] Todos los endpoints respetan contratos de `docs/specs.md`.
+- [ ] UI usable en móvil con una mano (inputs grandes, botones claros).
+- [ ] Errores de negocio devuelven mensajes claros en español.
 
-- `Container`
-- `Section`
-- `Eyebrow`
-- `Button`
-- `Card`
+---
 
-New landing or marketing sections should compose `Section` and `Container`. New buttons should use `Button` variants instead of hand-written button class strings.
+## 🎯 Success Criteria
 
-### Allowed Tokens
+- El proyecto se instala con `bun install` y corre con `bun run dev` sin errores.
+- Un usuario puede:
+  - Abrir el chat,
+  - Describir una placa/muro/columna/revoque en lenguaje natural,
+  - Recibir cálculo + recomendación UltraCem + ahorro económico y ambiental
+  **en menos de 90 segundos**.
+- Las fórmulas de cálculo son consistentes con los tests y revisadas por ingeniería.
+- No hay conflictos de package manager ni lockfiles.
 
-Use the UltraCem Tailwind tokens:
-
-- Colors: `ultracem-blue`, `ultracem-yellow`, `ultracem-green`, `ultracem-gray`, `ultracem-surface`, `ultracem-border`
-- Type: `text-display`, `text-h1`, `text-h2`, `text-h3`, `text-body`, `text-body-sm`, `text-caption`, `text-button`
-- Radius: `rounded-uc-button`, `rounded-uc-card`, `rounded-uc-input`, `rounded-full`
-- Shadow: `shadow-uc-card`, `shadow-uc-modal`
-- Layout: `max-w-uc-container`, `container-uc`
-
-### Prohibited UI Patterns
-
-Do not introduce:
-
-- Orange brand colors or classes.
-- `Bebas Neue`, alternate display fonts, or extra font imports.
-- `font-display`.
-- Technical blueprint decoration such as grid backgrounds, corner brackets, dashed technical borders, noise overlays, diagonal construction lines, or floating hero cards.
-- Purple gradient SaaS aesthetics.
-- Arbitrary pixel typography like `text-[13px]` when a token exists.
-- Arbitrary radii like `rounded-[20px]` when a token exists.
-
-### Motion
-
-Keep motion minimal and useful:
-
-- Allowed: `animate-fade-in-up`, `animate-slide-in-left`, `animate-slide-in-right`, `stagger-1` through `stagger-5`, typing dots.
-- Respect `prefers-reduced-motion`.
-- Avoid infinite decorative motion.
-
-### Accessibility
-
-- Preserve `<html lang="es">`.
-- Keep text contrast WCAG AA.
-- Use visible focus states with `ring-uc-focus`.
-- Keep touch targets at least 44px.
-- Use `next/image` for images and descriptive `alt` text.
-- Form controls need visible labels or `aria-label`.
-
-## Supabase and Data Rules
-
-- Never expose service role keys to the client.
-- Keep RLS enabled except for intentionally public product reads.
-- Generate and use TypeScript database types.
-- Validate request bodies with Zod.
-- Translate technical errors into clear Spanish user messages.
-
-## Gemini Rules
-
-- Call Gemini only from server code.
-- Validate model output with Zod or explicit parsing.
-- Use low temperature for stable calculation output.
-- Sanitize logs and never log secrets.
-
-## Coding Standards
-
-- TypeScript strict mode stays enabled.
-- Avoid `any` unless there is a documented reason.
-- Use kebab-case for file and folder names, PascalCase for React components and types, camelCase for functions, and SCREAMING_SNAKE_CASE for constants.
-- Prefer early returns and pure functions in domain code.
-- Do not mutate arrays or objects when simple immutable operations work.
-
-## Verification
-
-Before considering frontend work complete:
-
-- `bun run build` passes.
-- Search results in `app/` and `src/` contain no prohibited design patterns.
-- New UI uses `src/components/ui/` primitives where appropriate.
-- Main flows `/` and `/chat` remain mobile-first and usable with one hand.
+---

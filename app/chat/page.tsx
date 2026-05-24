@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { ChatContainer } from "@/components/chat";
+import { ChatContainer } from "@/components/chat/ChatContainer";
 
 export const metadata: Metadata = {
   title: "UltraCem | Chat — Calculadora de materiales",

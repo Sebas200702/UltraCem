@@ -11,9 +11,9 @@ export default function AdminLayout({
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
           <Link
             href="/admin"
-            className="text-h2 font-semibold text-white"
+            className="font-display text-2xl tracking-wide text-white"
           >
-            UltraCem Admin
+            ULTRACEM ADMIN
           </Link>
           <nav className="flex gap-6">
             <Link

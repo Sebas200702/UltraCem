@@ -398,7 +398,7 @@ export interface ProductRecommendation {
 #### 3.1.1 Core Formulas (Based on NSR-10 Colombia Standards)
 
 ```typescript
-// src/domains/calculation/calculation.service.ts
+// src/domains/calculation/calculator.service.ts
 
 interface CalculationInput {
   structureType: StructureType;
@@ -632,7 +632,7 @@ class ValidationError extends Error {
 ### 3.2 Product Recommendation Engine
 
 ```typescript
-// src/domains/recommendation/recommendation.service.ts
+// src/domains/recommendation/product-matcher.service.ts
 
 export interface RecommendationInput {
   structureType: StructureType;
@@ -823,7 +823,7 @@ export class ProductMatcher {
 ### 3.3 NLP Conversation Manager (Gemini Integration)
 
 ```typescript
-// src/domains/conversation/conversation.service.ts
+// src/domains/conversation/nlp.service.ts
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
@@ -1241,13 +1241,14 @@ graph TD
     ProductCard --> CTAButton[CTA Button]
 ```
 
-### 5.3 Key UI Components (UltraCem UI Primitives)
+### 5.3 Key UI Components (Atomic Design)
 
-#### Button primitive
+#### Atoms
 ```typescript
-// src/components/ui/button/button.tsx
+// src/components/atoms/Button.tsx
 interface ButtonProps {
-  variant: 'primary' | 'secondary' | 'outline' | 'ghost' | 'white';
+  variant: 'primary' | 'secondary' | 'outline';
+  size: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
   onClick?: () => void;
@@ -1256,15 +1257,15 @@ interface ButtonProps {
 
 // Tailwind classes
 const variantClasses = {
-  primary: 'bg-ultracem-blue text-white hover:bg-ultracem-blue-dark',
-  secondary: 'bg-ultracem-yellow text-ultracem-blue hover:bg-ultracem-yellow-hover',
-  outline: 'border-2 border-ultracem-blue text-ultracem-blue hover:bg-ultracem-blue hover:text-white',
+  primary: 'bg-ultracem-orange-600 text-white hover:bg-ultracem-orange-700',
+  secondary: 'bg-gray-600 text-white hover:bg-gray-700',
+  outline: 'border-2 border-ultracem-orange-600 text-ultracem-orange-600',
 };
 ```
 
-#### Chat message
+#### Molecules
 ```typescript
-// src/components/chat/message-bubble/message-bubble.tsx
+// src/components/molecules/MessageBubble.tsx
 interface MessageBubbleProps {
   role: 'user' | 'assistant';
   content: string;
@@ -1273,14 +1274,14 @@ interface MessageBubbleProps {
 }
 
 // Layout:
-// - User messages: right-aligned, blue background
-// - Assistant messages: left-aligned, light gray or white background
+// - User messages: right-aligned, orange background
+// - Assistant messages: left-aligned, gray background
 // - Markdown rendering for assistant messages
 ```
 
 #### Organisms
 ```typescript
-// src/components/chat/calculation-result/calculation-result.tsx
+// src/components/organisms/CalculationResultCard.tsx
 interface CalculationResultCardProps {
   calculation: Calculation;
   recommendation: RecommendationOutput;
@@ -1358,7 +1359,7 @@ flowchart TD
 ### 6.1 Zustand Store Structure
 
 ```typescript
-// src/store/chat/chat-store.ts
+// src/store/chat.store.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
