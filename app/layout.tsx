@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   title: "UltraCem | Calculadora de materiales con IA",
   description:
     "Asistente para calcular cemento, arena y materiales de construcción.",
+  icons: {
+    icon: "/images/ultracem-favicon.png",
+    shortcut: "/images/ultracem-favicon.png",
+    apple: "/images/ultracem-favicon.png",
+  },
 };
 
 export const viewport: Viewport = {
