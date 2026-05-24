@@ -4,8 +4,9 @@ import "./globals.css";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-montserrat",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -20,9 +21,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="scroll-smooth">
+    <html lang="es" className={`${montserrat.variable} scroll-smooth`}>
       <body
-        className={`${montserrat.variable} font-sans text-ultracem-gray-900 antialiased`}
+        className="font-sans bg-ultracem-surface-off text-ultracem-gray-900 antialiased"
       >
         {children}
       </body>
