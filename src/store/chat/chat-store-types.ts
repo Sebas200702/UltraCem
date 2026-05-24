@@ -1,6 +1,8 @@
 import type { ComparisonData } from "@/domains/recommendation/recommendation.types";
 import type { AppliedStandard } from '@/types';
 
+export type { AppliedStandard };
+
 export interface Message {
   id: string;
   role: "user" | "assistant" | "system";
