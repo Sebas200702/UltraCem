@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ExternalLink, FileText, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ExternalLink, FileText, ShieldCheck } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -11,6 +11,8 @@ const CATEGORY_LABELS: Record<string, string> = {
   sustainability: 'Sostenibilidad',
   fire: 'Seguridad contra incendio',
   masonry: 'Mampostería',
+  safety: 'Seguridad',
+  plaster: 'Revoque',
 };
 
 const STRUCTURE_LABELS: Record<string, string> = {
@@ -33,6 +35,16 @@ function labelFromMap(labels: Record<string, string>, value: string | null) {
   return labels[value] ?? value;
 }
 
+function sourceAccessNote(code: string, source: string): string | null {
+  if (code.startsWith('NTC-') || source.includes('icontec.org')) {
+    return 'Las NTC no están disponibles gratuitamente en línea. El enlace lleva al portal de ICONTEC; la norma completa debe adquirirse en su tienda oficial.';
+  }
+  if (code.startsWith('CAMACOL-') || code.startsWith('CCCS-') || code.startsWith('CASA-')) {
+    return 'Referencia de guía o certificación sectorial, no norma legal obligatoria.';
+  }
+  return null;
+}
+
 export default async function StandardDetailPage({
   params,
 }: {
@@ -44,6 +56,8 @@ export default async function StandardDetailPage({
   });
 
   if (!standard) notFound();
+
+  const accessNote = sourceAccessNote(standard.code, standard.source);
 
   return (
     <main className="min-h-screen bg-ultracem-surface-off py-10">
@@ -75,6 +89,23 @@ export default async function StandardDetailPage({
           </div>
 
           <div className="grid gap-5 px-6 py-6">
+            {!standard.verbatim && (
+              <div className="flex gap-3 rounded-uc-card border border-amber-200 bg-amber-50 p-4">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+                <div>
+                  <p className="text-body-sm font-bold text-amber-900">
+                    Resumen redactado por UltraCem
+                  </p>
+                  <p className="mt-1 text-body-sm leading-relaxed text-amber-900/90">
+                    El texto de abajo es una interpretación práctica para maestros de obra,{' '}
+                    <strong>no una cita literal</strong> del documento oficial. Usa la referencia
+                    normativa y el enlace a la entidad emisora para verificar antes de tomar
+                    decisiones en obra.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="rounded-uc-card border border-ultracem-gray-100 bg-ultracem-surface p-4">
               <div className="mb-2 flex items-center gap-2 text-body-sm font-bold uppercase tracking-wider text-ultracem-gray-600">
                 <FileText className="h-4 w-4 text-ultracem-blue" />
@@ -92,6 +123,17 @@ export default async function StandardDetailPage({
                 </p>
                 <p className="text-body leading-relaxed text-ultracem-gray-800">
                   {standard.implication}
+                </p>
+              </div>
+            )}
+
+            {standard.articleRef && (
+              <div className="rounded-uc-card border border-ultracem-gray-100 bg-ultracem-surface p-4">
+                <p className="mb-2 text-caption font-bold uppercase tracking-wider text-ultracem-gray-600">
+                  Dónde verificar en el documento oficial
+                </p>
+                <p className="text-body-sm leading-relaxed text-ultracem-gray-800">
+                  {standard.articleRef}
                 </p>
               </div>
             )}
@@ -143,7 +185,7 @@ export default async function StandardDetailPage({
 
             <div className="rounded-uc-card border border-ultracem-gray-100 bg-ultracem-surface p-4">
               <p className="mb-2 text-caption font-bold uppercase tracking-wider text-ultracem-gray-600">
-                Fuente oficial
+                Entidad emisora
               </p>
               <a
                 href={standard.source}
@@ -151,9 +193,14 @@ export default async function StandardDetailPage({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-body-sm font-semibold text-ultracem-blue transition-colors hover:text-ultracem-blue-dark hover:underline"
               >
-                Consultar entidad emisora
+                Ir al portal oficial
                 <ExternalLink className="h-4 w-4" />
               </a>
+              {accessNote && (
+                <p className="mt-3 text-body-sm leading-relaxed text-ultracem-gray-600">
+                  {accessNote}
+                </p>
+              )}
             </div>
           </div>
         </section>

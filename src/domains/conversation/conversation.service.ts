@@ -8,6 +8,7 @@ import type {
   SafetyWarning,
 } from './conversation.types';
 import type { StructureType } from '@/types/database.types';
+import type { AppliedStandard } from '@/domains/standards/standards.service';
 
 export function hasRequiredDimensions(
   extracted: Partial<CalculationInput> | undefined,
@@ -157,15 +158,19 @@ export class NLPService {
   /**
    * Streams a natural-language reply for the user.
    * Uses a plain-text prompt (NO JSON) so the user sees clean text.
-   * The extracted NLPResponse from extractData is passed in so the reply
-   * can reference dimensions, warnings, etc.
+   *
+   * `extractedResult` is optional: when omitted the reply stream can start
+   * BEFORE `extractData` finishes, so the user sees the first token in ~500ms
+   * instead of waiting for the structured extraction (~1-3s). Gemini reads
+   * the same user message and history, so the natural reply stays coherent
+   * even without the pre-extracted dimensions.
    */
   async *generateReplyStream(
     userMessage: string,
     context: ConversationContext,
-    extractedResult: NLPResponse
+    extractedResult?: NLPResponse | null
   ): AsyncGenerator<string> {
-    const prompt = this.buildReplyPrompt(userMessage, context, extractedResult);
+    const prompt = this.buildReplyPrompt(userMessage, context, extractedResult ?? null);
 
     try {
       const result = await this.model.generateContentStream(prompt);
@@ -273,7 +278,7 @@ Responde ÚNICAMENTE con el JSON válido.`;
   private buildReplyPrompt(
     userMessage: string,
     context: ConversationContext,
-    extractedResult: NLPResponse
+    extractedResult: NLPResponse | null
   ): string {
     const regionBlock = context.region ? `
 Región detectada: ${context.region}. Ajusta el tono y consejos al clima de esta zona.` : '';
@@ -282,15 +287,29 @@ Región detectada: ${context.region}. Ajusta el tono y consejos al clima de esta
 Normas aplicables:
 ${context.standards.map(s => `- ${s.code}: ${s.title} — ${s.implication || s.content}`).join('\n')}` : '';
 
-    const dataBlock = extractedResult.extractedData
-      ? `Datos extraídos del mensaje: ${JSON.stringify(extractedResult.extractedData, null, 2)}`
-      : 'Aún no se han extraído dimensiones.';
+    // when we stream the reply in parallel with extractData, extractedResult is null.
+    // fall back to whatever dimensions the conversation accumulated in prior turns.
+    const accumulatedData =
+      extractedResult?.extractedData ??
+      (Object.keys(context.extractedData ?? {}).length > 0 ? context.extractedData : null);
 
-    const readyBlock = extractedResult.isReadyForCalculation
-      ? 'El usuario YA proporcionó todas las dimensiones necesarias. Confirma los datos y dile que vas a calcular.'
-      : 'Faltan dimensiones. Pregunta amablemente lo que hace falta.';
+    const dataBlock = accumulatedData
+      ? `Datos acumulados hasta ahora: ${JSON.stringify(accumulatedData, null, 2)}
+Lee también el mensaje del usuario y deduce cualquier dimensión nueva que mencione.`
+      : 'Aún no hay dimensiones registradas. Lee el mensaje del usuario y deduce las que mencione.';
 
-    const warningsBlock = extractedResult.warnings && extractedResult.warnings.length > 0
+    let readyBlock: string;
+    if (!extractedResult) {
+      readyBlock =
+        'Si el usuario ya dio todas las dimensiones necesarias, confírmaselas y avísale que vas a calcular. Si faltan, pregúntalas amablemente.';
+    } else if (extractedResult.isReadyForCalculation) {
+      readyBlock =
+        'El usuario YA proporcionó todas las dimensiones necesarias. Confirma los datos y dile que vas a calcular.';
+    } else {
+      readyBlock = 'Faltan dimensiones. Pregunta amablemente lo que hace falta.';
+    }
+
+    const warningsBlock = extractedResult?.warnings && extractedResult.warnings.length > 0
       ? `Advertencias a comunicar: ${extractedResult.warnings.map(w => w.message).join('; ')}`
       : '';
 
@@ -382,12 +401,7 @@ Responde de forma natural y amigable. SOLO texto, nunca JSON.`;
   }
 }
 
-export interface AppliedStandard {
-  code: string;
-  title: string;
-  implication: string;
-  sourceUrl: string;
-}
+export type { AppliedStandard } from '@/domains/standards/standards.service';
 
 export function formatCalculationSummary(
   calculation: Calculation,
@@ -415,7 +429,11 @@ export function formatCalculationSummary(
   const regionBadge = region ? `\n📍 **Región:** ${region === 'caribe' ? 'Caribe (cálido, salino)' : region === 'pacifica' ? 'Pacífica (húmedo, salino)' : 'Andina (templado)'}\n` : '';
 
   const standardsRef = standards && standards.length > 0
-    ? `\n📋 **Normas aplicadas:**\n${standards.map(s => `- [**${s.code}**](${s.sourceUrl}) — ${s.title}: ${s.implication}`).join('\n')}\n`
+    ? `\n📋 **Referencias técnicas** _(resúmenes UltraCem, no citas literales)_:\n${standards.map((s) => {
+        const ref = s.articleRef ? ` — _${s.articleRef}_` : '';
+        const tag = s.verbatim ? '' : ' _(parafraseado)_';
+        return `- [**${s.code}**](${s.sourceUrl}) — ${s.title}${tag}: ${s.implication}${ref}`;
+      }).join('\n')}\n`
     : '';
 
   const methodology = `\n🔍 **Cómo se calculó:**

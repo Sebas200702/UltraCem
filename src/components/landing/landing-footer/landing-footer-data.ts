@@ -36,7 +36,7 @@ export const footerGroups: ReadonlyArray<FooterGroup> = [
     ],
   },
   {
-    title: "Compania",
+    title: "Compañía",
     links: [
       {
         label: "Trayectoria",
@@ -79,7 +79,7 @@ export const footerGroups: ReadonlyArray<FooterGroup> = [
         external: true,
       },
       {
-        label: "Cotiza aqui",
+        label: "Cotiza aquí",
         href: "https://ultracem.co/cotizar-ultracem/",
         external: true,
       },
@@ -90,7 +90,7 @@ export const footerGroups: ReadonlyArray<FooterGroup> = [
 export const footerLegalLinks: ReadonlyArray<FooterLink> = [
   { label: "ultracem.co", href: "https://ultracem.co/", external: true },
   {
-    label: "Politica de privacidad",
+    label: "Política de privacidad",
     href: "https://ultracem.co/",
     external: true,
   },

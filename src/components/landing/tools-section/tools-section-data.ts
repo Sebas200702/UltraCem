@@ -3,20 +3,20 @@ import { type Tool } from "@/components/landing/tools-section/tools-section-type
 
 export const tools: Tool[] = [
   {
-    tag: "Calculo manual",
+    tag: "Cálculo manual",
     title: "Calculadora de materiales",
     description:
-      "Ajusta dimensiones y obten dosificacion detallada para distintos tipos de estructura.",
+      "Ajusta dimensiones y obtén dosificación detallada para distintos tipos de estructura.",
     href: "/calculadora",
     cta: "Ir a la calculadora",
     external: false,
     icon: Calculator,
   },
   {
-    tag: "Gestion de obras",
+    tag: "Gestión de obras",
     title: "Seguimiento de proyectos",
     description:
-      "Crea proyectos, registra avances y prepara informacion para cotizaciones futuras.",
+      "Crea proyectos, registra avances y prepara información para cotizaciones futuras.",
     href: "/chat",
     cta: "Ver mis obras",
     external: false,
@@ -26,7 +26,7 @@ export const tools: Tool[] = [
     tag: "Sostenibilidad",
     title: "Panel de impacto",
     description:
-      "Revisa CO2 evitado, material ahorrado y presupuesto optimizado en tus obras.",
+      "Revisa CO₂ evitado, material ahorrado y presupuesto optimizado en tus obras.",
     href: "/chat",
     cta: "Ver impacto",
     external: false,
@@ -36,7 +36,7 @@ export const tools: Tool[] = [
     tag: "Comercial",
     title: "Cotiza con UltraCem",
     description:
-      "Cuando tengas el calculo, conecta con asesores comerciales por region.",
+      "Cuando tengas el cálculo, conecta con asesores comerciales por región.",
     href: "https://ultracem.co/cotizar-ultracem/",
     cta: "Cotizar ahora",
     external: true,

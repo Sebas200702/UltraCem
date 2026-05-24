@@ -17,9 +17,9 @@ export function HeroSection() {
             Calcula tus materiales en segundos
           </h1>
           <p className="mb-9 max-w-[520px] text-body leading-relaxed text-white/75">
-            Cuentale a Vanesa que vas a construir. Ella calcula cuantos sacos de
-            cemento, arena, grava y agua necesitas con una dosificacion clara
-            para reducir desperdicio en obra.
+            Cuéntale a Vanesa qué vas a construir. Ella calcula cuántos sacos
+            de cemento, arena, grava y agua necesitas con una dosificación
+            clara para reducir desperdicio en obra.
           </p>
           <div className="mb-10 flex flex-wrap gap-3">
             <Button href="/chat" variant="secondary" className="gap-2">
@@ -27,7 +27,7 @@ export function HeroSection() {
               Hablar con Vanesa
             </Button>
             <Button href="#ejemplos" variant="white">
-              Ver como funciona
+              Ver cómo funciona
             </Button>
           </div>
 

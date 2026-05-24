@@ -12,10 +12,10 @@ export function FlowSection() {
       <Eyebrow className="mb-4">Ejemplo real</Eyebrow>
       <div className="mb-5 h-1 w-24 rounded-full bg-ultracem-yellow" />
       <h2 className="mb-3 max-w-[620px] text-h1 text-ultracem-gray-900 md:text-display">
-        Asi le puedes hablar a Vanesa
+        Así le puedes hablar a Vanesa
       </h2>
       <p className="mb-12 max-w-[560px] text-body text-ultracem-gray-600">
-        No necesitas saber de tecnica. Escribe exactamente como le contarias el
+        No necesitas saber de técnica. Escribe exactamente como le contarías el
         trabajo a un colega y recibe un resultado escaneable.
       </p>
 

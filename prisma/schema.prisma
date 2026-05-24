@@ -135,6 +135,11 @@ model ConstructionStandard {
   structureType String?  @db.VarChar(20)
   content       String
   implication   String?
+  // section/article inside the source document (e.g. "Título C, §C.4.2"). null when unknown.
+  articleRef    String?  @db.VarChar(255)
+  // true only when `content` is a literal quote from the official document. defaults
+  // to false: assume content is an UltraCem-authored paraphrase until proven otherwise.
+  verbatim      Boolean  @default(false)
   parameters    Json     @default("{}")
   source        String   @db.VarChar(500)
   tags          String[]

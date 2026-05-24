@@ -13,14 +13,14 @@ export function ChatMockup() {
             Vanesa · UltraCem
           </p>
           <p className="flex items-center gap-2 text-caption text-white/70 before:h-1.5 before:w-1.5 before:rounded-full before:bg-ultracem-green before:content-['']">
-            En linea ahora
+            En línea ahora
           </p>
         </div>
       </div>
 
       <div className="flex min-h-[260px] flex-col gap-3 bg-ultracem-gray-100 p-4">
         <div className="bubble-assistant max-w-[82%] self-start shadow-sm">
-          Hola, soy Vanesa. Cuentame que vas a construir y te calculo los
+          Hola, soy Vanesa. Cuéntame qué vas a construir y te calculo los
           materiales al instante.
         </div>
         <div className="flex flex-wrap gap-2 self-start">

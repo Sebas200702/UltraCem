@@ -27,8 +27,8 @@ export function CtaSection() {
           Listo para calcular tu obra
         </h2>
         <p className="mb-8 text-body text-ultracem-blue/75">
-          Abre el chat con Vanesa ahora mismo. En menos de 90 segundos sabras
-          cuanto material necesitas y que producto UltraCem se ajusta mejor.
+          Abre el chat con Vanesa ahora mismo. En menos de 90 segundos sabrás
+          cuánto material necesitas y qué producto UltraCem se ajusta mejor.
         </p>
         <Button href="/chat" variant="primary" className="gap-2">
           <MessageCircle className="h-4 w-4" strokeWidth={2.5} />

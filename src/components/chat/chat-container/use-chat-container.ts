@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store';
 import { useGeminiLive, parseLiveResponse } from '@/hooks/use-gemini-live';
-import { type CalculationData } from '@/components/chat/chat-container/chat-container-types';
+import {
+  type CalculationData,
+  type AppliedStandard,
+} from '@/components/chat/chat-container/chat-container-types';
 
 function adaptRecommendation(
   calc: {
@@ -38,7 +41,7 @@ function adaptRecommendation(
     wasteFactor?: number;
     region?: string | null;
     regionLabel?: string;
-    standardsApplied?: Array<{ code: string; title: string; implication: string; sourceUrl: string }>;
+    standardsApplied?: AppliedStandard[];
     warnings?: Array<{ type: string; message: string; severity: string }>;
   } | null,
 ): CalculationData | null {

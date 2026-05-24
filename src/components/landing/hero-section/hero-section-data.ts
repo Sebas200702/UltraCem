@@ -6,7 +6,7 @@ export interface HeroKpi {
 
 export const HERO_KPIS: ReadonlyArray<HeroKpi> = [
   {
-    label: "Calculo",
+    label: "Cálculo",
     value: "< 90s",
     detail: "De la idea al resultado",
   },

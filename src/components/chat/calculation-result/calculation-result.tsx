@@ -237,8 +237,11 @@ export function CalculationResult({
 
         {hasStandards && (
           <div className="relative border-t border-ultracem-gray-100 px-5 py-4">
-            <p className="mb-3 text-caption font-bold uppercase tracking-widest text-ultracem-gray-600">
-              Normas aplicadas
+            <p className="mb-1 text-caption font-bold uppercase tracking-widest text-ultracem-gray-600">
+              Referencias técnicas
+            </p>
+            <p className="mb-3 text-caption text-ultracem-gray-500">
+              Resúmenes UltraCem con base en normativa colombiana — no son citas literales.
             </p>
             <div className="flex flex-col gap-3">
               {data.standardsApplied!.map((s) => (
@@ -261,7 +264,7 @@ export function CalculationResult({
                         target={s.sourceUrl.startsWith('/') ? undefined : '_blank'}
                         rel={s.sourceUrl.startsWith('/') ? undefined : 'noopener noreferrer'}
                         className="shrink-0 text-ultracem-blue hover:underline"
-                        title="Ver detalle de la norma"
+                        title="Ver ficha y fuente oficial"
                       >
                         <FileText className="h-4 w-4" />
                       </a>
@@ -270,6 +273,11 @@ export function CalculationResult({
                   <p className="mt-1.5 text-caption leading-relaxed text-ultracem-gray-600">
                     {s.implication}
                   </p>
+                  {'articleRef' in s && s.articleRef && (
+                    <p className="mt-1 text-caption italic text-ultracem-gray-500">
+                      Verificar en: {s.articleRef}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -408,7 +416,7 @@ export function CalculationResult({
           href={data.product.datasheet_url || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label="Ver ficha tecnica"
+          aria-label="Ver ficha técnica"
           className={`inline-flex min-h-11 items-center justify-center gap-1.5 rounded-uc-button bg-ultracem-yellow px-2 text-button text-ultracem-blue transition-colors hover:bg-ultracem-yellow-hover ${
             !data.product.datasheet_url ? "pointer-events-none opacity-50" : ""
           }`}
@@ -429,7 +437,7 @@ export function CalculationResult({
         <button
           type="button"
           onClick={onNewCalculation}
-          aria-label="Nuevo calculo"
+          aria-label="Nuevo cálculo"
           className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-uc-button border-2 border-ultracem-blue px-2 text-button text-ultracem-blue transition-colors hover:bg-ultracem-blue hover:text-white"
         >
           <RotateCcw className="h-4 w-4" />

@@ -1,7 +1,7 @@
 import { type NavItem } from '@/components/landing/landing-nav/landing-nav-types';
 
 export const navItems: NavItem[] = [
-  { label: "Como funciona", href: "#ejemplos" },
+  { label: "Cómo funciona", href: "#ejemplos" },
   { label: "Herramientas", href: "#herramientas" },
   {
     label: "Productos",

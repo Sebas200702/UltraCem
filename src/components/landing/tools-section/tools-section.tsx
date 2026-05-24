@@ -54,7 +54,7 @@ export function ToolsSection() {
       id="herramientas"
       className="bg-ultracem-surface-muted"
     >
-      <Eyebrow className="mb-4">Mas herramientas</Eyebrow>
+      <Eyebrow className="mb-4">Más herramientas</Eyebrow>
       <h2 className="mb-3 max-w-[620px] text-h1 text-ultracem-gray-900 md:text-display">
         Explora el resto de la plataforma
       </h2>

@@ -5,7 +5,7 @@ import { getGeminiApiKey } from '@/lib/gemini';
 import { prisma } from '@/lib/prisma';
 import { chatRateLimiter, enforceRateLimit } from '@/lib/rate-limiter';
 import { detectRegion, type ColombianRegion } from '@/domains/region/region.service';
-import { getStandardsService, type AppliedStandard } from '@/domains/standards/standards.service';
+import { getStandardsService, mapToApplied } from '@/domains/standards/standards.service';
 import { fastClassify } from '@/domains/agents/fast-classifier';
 import type { ChatSendResponse, Message, MessageRole } from '@/types';
 
@@ -78,6 +78,23 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // local, synchronous work first (no I/O)
+    const regionResult = detectRegion(message);
+    const region: ColombianRegion | null = regionResult.region;
+    const regionConfidence = regionResult.confidence;
+    const classification = fastClassify(message);
+
+    const nlpService = new NLPService(apiKey);
+    const standardsService = getStandardsService(prisma);
+
+    // standards retrieval doesn't depend on the conversation, so kick it off in
+    // parallel with the conversation lookup to shave a DB round-trip.
+    const standardsPromise = standardsService.retrieveStandards(
+      classification.structureType,
+      region,
+      message
+    );
+
     const conversation = conversationId
       ? await prisma.conversation.findUnique({ where: { id: conversationId } })
       : await prisma.conversation.create({
@@ -89,6 +106,8 @@ export async function POST(request: NextRequest) {
         });
 
     if (!conversation) {
+      // make sure the in-flight standards query doesn't dangle
+      void standardsPromise.catch(() => undefined);
       return NextResponse.json(
         {
           success: false,
@@ -101,41 +120,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const previousMessages = conversationId
-      ? await prisma.message.findMany({
-          where: { conversation_id: conversation.id },
-          orderBy: { created_at: 'asc' },
-        })
-      : [];
+    // these two are independent (history vs. user-message insert) and both only
+    // need conversation.id, so run them in parallel with standards.
+    const [previousMessages, userMessageRecord, standards] = await Promise.all([
+      conversationId
+        ? prisma.message.findMany({
+            where: { conversation_id: conversation.id },
+            orderBy: { created_at: 'asc' },
+          })
+        : Promise.resolve([] as Awaited<ReturnType<typeof prisma.message.findMany>>),
+      prisma.message.create({
+        data: {
+          conversation_id: conversation.id,
+          role: 'user',
+          content: message,
+          extracted_data: {},
+        },
+      }),
+      standardsPromise,
+    ]);
 
     const conversationMetadata = isRecord(conversation.metadata) ? conversation.metadata : {};
     const currentExtractedData = isRecord(conversationMetadata.lastExtractedData)
       ? conversationMetadata.lastExtractedData
       : {};
-
-    const userMessageRecord = await prisma.message.create({
-      data: {
-        conversation_id: conversation.id,
-        role: 'user',
-        content: message,
-        extracted_data: {},
-      },
-    });
-
-    const nlpService = new NLPService(apiKey);
-    const standardsService = getStandardsService(prisma);
-
-    const regionResult = detectRegion(message);
-    let region: ColombianRegion | null = regionResult.region;
-    let regionConfidence = regionResult.confidence;
-
-    const classification = fastClassify(message);
-
-    const standards = await standardsService.retrieveStandards(
-      classification.structureType,
-      region,
-      message
-    );
 
     const context: ConversationContext = {
       conversationId: conversation.id,
@@ -146,12 +154,7 @@ export async function POST(request: NextRequest) {
       standards: standards as ConversationContext['standards'],
     };
 
-    const standardsApplied: AppliedStandard[] = standards.map((s) => ({
-      code: s.code,
-      title: s.title,
-      implication: s.implication || s.content,
-      sourceUrl: s.source,
-    }));
+    const standardsApplied = standards.map(mapToApplied);
 
     if (!wantsStream) {
       // Non-streaming fallback (original behavior)
@@ -199,28 +202,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, data });
     }
 
-    // Streaming response:
-    // 1. Extract structured data first (fast, non-streaming JSON call)
-    // 2. Stream natural-language reply (plain text, no JSON visible to user)
+    // Streaming response, optimized for low TTFB:
+    // - kick off extractData in parallel (don't await it).
+    // - start streaming the natural-language reply IMMEDIATELY using only the
+    //   message + history + accumulated context. Gemini reads the user message
+    //   itself, so the reply is still coherent without the freshly extracted data.
+    // - at the end of the stream, await extractData to build metadata, persist,
+    //   and let the client trigger the calculation if applicable.
+    const extractDataPromise: Promise<Awaited<ReturnType<NLPService['extractData']>>> =
+      nlpService.extractData(message, context).catch((extractErr) => {
+        console.error('Extract data error:', extractErr);
+        return {
+          reply: '',
+          intent: 'unknown' as const,
+          isReadyForCalculation: false,
+          warnings: [],
+        };
+      });
+
     const stream = new ReadableStream({
       async start(controller) {
         let fullReply = '';
-        let extracted: Awaited<ReturnType<NLPService['extractData']>>;
 
         try {
-          extracted = await nlpService.extractData(message, context);
-        } catch (extractErr) {
-          console.error('Extract data error:', extractErr);
-          extracted = {
-            reply: FALLBACK_REPLY,
-            intent: 'unknown',
-            isReadyForCalculation: false,
-            warnings: [],
-          };
-        }
-
-        try {
-          const generator = nlpService.generateReplyStream(message, context, extracted);
+          const generator = nlpService.generateReplyStream(message, context);
 
           for await (const chunk of generator) {
             fullReply += chunk;
@@ -228,12 +233,13 @@ export async function POST(request: NextRequest) {
           }
         } catch (streamErr) {
           console.error('Reply stream error:', streamErr);
-          const fallback = FALLBACK_REPLY;
-          controller.enqueue(ENCODER.encode(fallback));
-          fullReply = fallback;
+          controller.enqueue(ENCODER.encode(FALLBACK_REPLY));
+          fullReply = FALLBACK_REPLY;
         }
 
-        // Persist assistant message and conversation metadata after stream completes
+        // now wait for the structured extraction to build metadata + persist
+        const extracted = await extractDataPromise;
+
         try {
           const assistantMessage = await prisma.message.create({
             data: {
@@ -263,7 +269,6 @@ export async function POST(request: NextRequest) {
           console.error('DB persist after stream:', dbErr);
         }
 
-        // Send metadata delimiter + JSON at the end of the stream
         const isReadyForCalculation =
           (extracted.isReadyForCalculation || hasRequiredDimensions(extracted.extractedData)) ?? false;
 
@@ -286,7 +291,9 @@ export async function POST(request: NextRequest) {
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-transform',
+        // disable proxy buffering (nginx, cloudflare) so chunks reach the client immediately
+        'X-Accel-Buffering': 'no',
       },
     });
   } catch (error) {

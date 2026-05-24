@@ -12,13 +12,14 @@ export function LandingFooter() {
           <UltraCemLogo variant="light" className="h-12 w-auto" />
           <p className="mt-5 max-w-[280px] text-body-sm leading-relaxed text-white/65">
             Fabricantes colombianos de cemento, concretos y soluciones para
-            obras. Acompanamos tu proyecto desde el calculo hasta la cotizacion.
+            obras. Acompañamos tu proyecto desde el cálculo hasta la
+            cotización.
           </p>
           <div className="mt-5 h-1 w-20 rounded-full bg-ultracem-yellow" />
         </div>
 
         <nav
-          aria-label="Pie de pagina"
+          aria-label="Pie de página"
           className="grid gap-8 sm:grid-cols-3 md:col-span-8"
         >
           {footerGroups.map((group) => (

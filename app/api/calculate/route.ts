@@ -5,7 +5,7 @@ import { MaterialCalculator } from '@/domains/calculation/calculator.service';
 import { recommend } from '@/domains/recommendation/product-matcher.service';
 import { formatCalculationSummary } from '@/domains/conversation/nlp.service';
 import { calcRateLimiter, enforceRateLimit } from '@/lib/rate-limiter';
-import { getStandardDetailUrl, getStandardsService, type AppliedStandard } from '@/domains/standards/standards.service';
+import { getStandardsService, mapToApplied } from '@/domains/standards/standards.service';
 import { getRegionLabel, type ColombianRegion } from '@/domains/region/region.service';
 import type { CalculateResponse, Calculation, RecommendationOutput } from '@/types';
 import type { Product, ProductCategory, TechnicalSpecs } from '@/types/database.types';
@@ -88,12 +88,7 @@ export async function POST(request: NextRequest) {
       region,
       ''
     );
-    const standardsApplied: AppliedStandard[] = standards.map((s) => ({
-      code: s.code,
-      title: s.title,
-      implication: s.implication || s.content,
-      sourceUrl: getStandardDetailUrl(s.code),
-    }));
+    const standardsApplied = standards.map(mapToApplied);
 
     const products = await prisma.product.findMany({
       where: { is_active: true },

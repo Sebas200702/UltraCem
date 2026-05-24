@@ -12,6 +12,9 @@ export interface AppliedStandard {
   title: string;
   implication: string;
   sourceUrl: string;
+  officialSource: string;
+  articleRef?: string | null;
+  verbatim: boolean;
 }
 
 export interface CalculationData {

@@ -90,7 +90,7 @@ export function LandingNav() {
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          aria-label={open ? "Cerrar menu" : "Abrir menu"}
+          aria-label={open ? "Cerrar menú" : "Abrir menú"}
           aria-expanded={open}
           className="inline-flex h-10 w-10 items-center justify-center rounded-uc-button text-white transition-colors hover:bg-white/10 lg:hidden"
         >
@@ -107,7 +107,7 @@ export function LandingNav() {
           <button
             type="button"
             onClick={close}
-            aria-label="Cerrar menu"
+            aria-label="Cerrar menú"
             className="absolute inset-0 bg-ultracem-blue-dark/60 backdrop-blur-sm"
           />
           <div className="relative bg-ultracem-blue px-4 pb-6 pt-2 shadow-uc-modal animate-fade-in-up">

@@ -155,6 +155,8 @@ export interface RetrievedStandard {
   title: string;
   content: string;
   implication: string | null;
+  articleRef: string | null;
+  verbatim: boolean;
   category: string;
   region: string | null;
   structureType: string | null;

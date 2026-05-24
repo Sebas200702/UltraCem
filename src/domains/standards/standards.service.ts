@@ -7,6 +7,8 @@ export interface RetrievedStandard {
   title: string;
   content: string;
   implication: string | null;
+  articleRef: string | null;
+  verbatim: boolean;
   category: string;
   region: string | null;
   structureType: string | null;
@@ -18,19 +20,27 @@ export interface AppliedStandard {
   code: string;
   title: string;
   implication: string;
+  /** Internal ficha at /normas/[code] */
   sourceUrl: string;
+  /** Verified external URL to the issuing institution */
+  officialSource: string;
+  articleRef: string | null;
+  verbatim: boolean;
 }
 
 export function getStandardDetailUrl(code: string): string {
   return `/normas/${encodeURIComponent(code)}`;
 }
 
-function mapToApplied(standard: RetrievedStandard): AppliedStandard {
+export function mapToApplied(standard: RetrievedStandard): AppliedStandard {
   return {
     code: standard.code,
     title: standard.title,
     implication: standard.implication || standard.content,
     sourceUrl: getStandardDetailUrl(standard.code),
+    officialSource: standard.source,
+    articleRef: standard.articleRef,
+    verbatim: standard.verbatim,
   };
 }
 
@@ -42,14 +52,10 @@ export class StandardsService {
     region: ColombianRegion | null,
     userMessage: string
   ): Promise<RetrievedStandard[]> {
-    // base filter: AND structureType+region when both are known so we don't
-    // pull random standards from other regions or other structures.
     const baseFilter: Record<string, unknown> = {};
     if (structureType) baseFilter.structureType = structureType;
     if (region) baseFilter.region = { in: [region, 'todos'] };
 
-    // category bumps from the user message — these get OR'd with the base filter
-    // so a sustainability question still returns sustainability standards.
     const categoryConditions: Array<Record<string, unknown>> = [];
     if (userMessage) {
       const lower = userMessage.toLowerCase();
@@ -79,7 +85,6 @@ export class StandardsService {
 
     if (exact.length >= 3) return exact as unknown as RetrievedStandard[];
 
-    // top-up with generic "todos" standards to always have something useful in the prompt.
     const exactIds = exact.map((s: { id: string }) => s.id);
     const fallback = await this.prisma.constructionStandard.findMany({
       where: { region: 'todos', id: { notIn: exactIds } },

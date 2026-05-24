@@ -41,7 +41,7 @@ function getStatusToken(state: string): StatusToken | null {
     case 'disconnected':
     default:
       return {
-        label: 'En linea',
+        label: 'En línea',
         dotClass: 'bg-ultracem-green',
         badgeClass: 'bg-white/10 text-white/85',
       };
@@ -143,7 +143,7 @@ export function ChatContainer() {
             {!calculationData && messages.length > 0 && (
               <div className="border-t border-ultracem-gray-100 bg-ultracem-surface px-4 py-3">
                 <p className="mb-2 text-caption font-semibold uppercase tracking-widest text-ultracem-gray-600">
-                  Proyectos rapidos
+                  Proyectos rápidos
                 </p>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   {QUICK_ACTIONS.map((action) => (
