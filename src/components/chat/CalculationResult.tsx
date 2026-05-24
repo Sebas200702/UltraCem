@@ -1,7 +1,18 @@
 "use client";
 
 import { CalculationData } from "./ChatContainer";
-import { CheckCircle, TreePine, Wallet, FileText, RotateCcw, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import {
+  CheckCircle,
+  TreePine,
+  Wallet,
+  FileText,
+  RotateCcw,
+  ArrowRight,
+  MessageCircle,
+  Copy,
+  Share2,
+} from "lucide-react";
 
 interface CalculationResultProps {
   data: CalculationData;
@@ -16,7 +27,63 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
+function generateSummary(data: CalculationData): string {
+  const lines = [
+    `*Resultado del cálculo UltraCem*`,
+    ``,
+    `*Volumen total:* ${data.volume_m3.toFixed(2)} m³`,
+    `*Materiales necesarios:*`,
+    `- Cemento: ${data.materials.cement_bags_50kg} sacos de 50kg`,
+    `- Arena: ${data.materials.sand_m3} m³`,
+    ...(data.materials.gravel_m3 ? [`- Grava: ${data.materials.gravel_m3} m³`] : []),
+    `- Agua: ${data.materials.water_liters} litros`,
+    ``,
+    `*Producto recomendado:* ${data.product.name} (${data.product.sku})`,
+    `*Precio por bulto:* ${formatCurrency(data.product.price_per_bag_cop)}`,
+    `*Costo estimado:* ${formatCurrency(data.estimated_cost_cop)}`,
+    `*Ahorro económico:* ${formatCurrency(data.savings_cop)}`,
+    `*Impacto ambiental:* ${Math.round(data.co2_saved_kg)} kg de CO₂ ahorrados`,
+  ];
+  return lines.join("\n");
+}
+
 export function CalculationResult({ data, onNewCalculation }: CalculationResultProps) {
+  const [copied, setCopied] = useState(false);
+
+  const summary = generateSummary(data);
+
+  const handleWhatsAppShare = () => {
+    const text = encodeURIComponent(summary);
+    window.open(`https://wa.me/573164034858?text=${text}`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCopySummary = async () => {
+    try {
+      await navigator.clipboard.writeText(summary);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (err) {
+      console.error("Error al copiar al portapapeles:", err);
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Resultado del cálculo UltraCem",
+          text: summary,
+        });
+      } catch (err) {
+        if ((err as Error).name !== "AbortError") {
+          handleCopySummary();
+        }
+      }
+    } else {
+      handleCopySummary();
+    }
+  };
+
   return (
     <div className="animate-fade-in-up">
       {/* Spec Sheet Container */}
@@ -220,6 +287,39 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
             <span>Nuevo cálculo</span>
           </button>
         </div>
+
+        {/* Share Actions */}
+        <div className="relative flex flex-col gap-2 border-t border-dashed border-ultracem-blue/20 px-5 py-4 sm:flex-row">
+          <button
+            onClick={handleWhatsAppShare}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ backgroundColor: "#25D366" }}
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>WhatsApp</span>
+          </button>
+          <button
+            onClick={handleCopySummary}
+            className="btn-outline flex flex-1 items-center justify-center gap-2"
+          >
+            <Copy className="h-4 w-4" />
+            <span>Copiar resumen</span>
+          </button>
+          <button
+            onClick={handleNativeShare}
+            className="btn-secondary flex flex-1 items-center justify-center gap-2"
+          >
+            <Share2 className="h-4 w-4" />
+            <span>Compartir</span>
+          </button>
+        </div>
+
+        {/* Toast notification */}
+        {copied && (
+          <div className="absolute bottom-4 left-1/2 z-20 -translate-x-1/2 rounded-full bg-ultracem-gray-900 px-4 py-2 text-xs font-medium text-white shadow-lg animate-fade-in-up">
+            ¡Copiado al portapapeles!
+          </div>
+        )}
       </div>
     </div>
   );

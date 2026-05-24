@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Message } from "./ChatContainer";
+import { Share2, Check } from "lucide-react";
 
 interface MessageBubbleProps {
   message: Message;
@@ -32,6 +34,48 @@ function renderContent(content: string) {
     }
     return <span key={i}>{part}</span>;
   });
+}
+
+function ShareButton({ content }: { content: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Mensaje de UltraCem",
+          text: content,
+        });
+        return;
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
+      }
+    }
+
+    // Fallback: copiar al portapapeles
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (err) {
+      console.error("Error al copiar al portapapeles:", err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleShare}
+      className="group flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium text-ultracem-gray-500 transition-all hover:bg-ultracem-blue/5 hover:text-ultracem-blue"
+      title={copied ? "Copiado" : "Compartir mensaje"}
+    >
+      {copied ? (
+        <Check className="h-3 w-3 text-ultracem-green" />
+      ) : (
+        <Share2 className="h-3 w-3" />
+      )}
+      <span>{copied ? "Copiado" : "Compartir"}</span>
+    </button>
+  );
 }
 
 export function MessageBubble({ message, index }: MessageBubbleProps) {
@@ -97,15 +141,16 @@ export function MessageBubble({ message, index }: MessageBubbleProps) {
           </div>
         </div>
 
-        {/* Timestamp */}
+        {/* Timestamp & Share */}
         <div
           className={`mt-1 flex items-center gap-1 ${
-            isUser ? "justify-end" : "justify-start"
+            isUser ? "justify-end" : "justify-between"
           }`}
         >
           <span className="text-[9px] font-mono uppercase tracking-wider text-ultracem-gray-600">
             {formatTime(message.timestamp)}
           </span>
+          {!isUser && <ShareButton content={message.content} />}
           {isUser && (
             <svg
               className="h-3 w-3 text-ultracem-blue"
