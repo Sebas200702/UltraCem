@@ -10,7 +10,6 @@ export const useChatStore = create<ChatState>()(
       messages: [],
       extractedData: {},
       isLoading: false,
-      isCalculating: false,
       error: null,
       currentCalculation: null,
       currentRecommendation: null,
@@ -108,7 +107,6 @@ export const useChatStore = create<ChatState>()(
           const decoder = new TextDecoder();
           let buffer = '';
           const METADATA_DELIMITER = '\n\n___METADATA___\n';
-          const DELIMITER_SEARCH_SIZE = METADATA_DELIMITER.length;
 
           while (true) {
             const { done, value } = await reader.read();
@@ -118,38 +116,17 @@ export const useChatStore = create<ChatState>()(
 
             // Only update UI with text before the metadata delimiter
             const delimiterIndex = buffer.indexOf(METADATA_DELIMITER);
+            const textToRender = delimiterIndex >= 0
+              ? buffer.slice(0, delimiterIndex)
+              : buffer;
 
-            if (delimiterIndex >= 0) {
-              const textToRender = buffer.slice(0, delimiterIndex);
-
-              set((state) => ({
-                messages: state.messages.map((msg) =>
-                  msg.id === assistantId
-                    ? { ...msg, content: textToRender }
-                    : msg
-                ),
-                ...(textToRender.trim() ? { isLoading: false } : {}),
-              }));
-
-              buffer = buffer.slice(delimiterIndex + METADATA_DELIMITER.length);
-              break;
-            }
-
-            if (buffer.length > DELIMITER_SEARCH_SIZE) {
-              const safePrefixLength = buffer.length - (DELIMITER_SEARCH_SIZE - 1);
-              const textToRender = buffer.slice(0, safePrefixLength);
-
-              set((state) => ({
-                messages: state.messages.map((msg) =>
-                  msg.id === assistantId
-                    ? { ...msg, content: textToRender }
-                    : msg
-                ),
-                ...(textToRender.trim() ? { isLoading: false } : {}),
-              }));
-
-              buffer = buffer.slice(safePrefixLength);
-            }
+            set((state) => ({
+              messages: state.messages.map((msg) =>
+                msg.id === assistantId
+                  ? { ...msg, content: textToRender }
+                  : msg
+              ),
+            }));
           }
 
           // Flush remaining bytes
@@ -202,7 +179,7 @@ export const useChatStore = create<ChatState>()(
       },
 
       performCalculation: async () => {
-        const { conversationId, extractedData, isCalculating, currentCalculation } = get();
+        const { conversationId, extractedData, isLoading, currentCalculation } = get();
         if (!conversationId) {
           set({ error: "Aún no tengo el ID de la conversación. Por favor envía un mensaje primero." });
           return;
@@ -211,9 +188,10 @@ export const useChatStore = create<ChatState>()(
           set({ error: "Aún me falta saber qué vas a construir (placa, muro, columna o revoque)." });
           return;
         }
-        if (isCalculating || currentCalculation) return;
+        // avoid duplicate calculations: voice + text paths can both call this concurrently
+        if (isLoading || currentCalculation) return;
 
-        set({ isCalculating: true, error: null });
+        set({ isLoading: true, error: null });
 
         try {
           const response = await fetch("/api/calculate", {
@@ -274,8 +252,6 @@ export const useChatStore = create<ChatState>()(
                 sku: result.recommendation.product.sku,
                 price_per_bag_cop:
                   result.recommendation.product.price_per_bag_cop,
-                product_url:
-                  result.recommendation.product.product_url ?? null,
                 datasheet_url:
                   result.recommendation.product.datasheet_url ?? null,
               },
@@ -292,7 +268,7 @@ export const useChatStore = create<ChatState>()(
             standardsApplied: result.standardsApplied ?? state.standardsApplied,
             warnings: result.warnings ?? state.warnings,
             messages: [...state.messages, summaryMessage],
-            isCalculating: false,
+            isLoading: false,
           }));
         } catch (err) {
           set({
@@ -300,12 +276,12 @@ export const useChatStore = create<ChatState>()(
               err instanceof Error
                 ? err.message
                 : "Ocurrió un error al realizar el cálculo",
-            isCalculating: false,
+            isLoading: false,
           });
         }
       },
 
-      extractFromVoice: async (content: string, localId?: string) => {
+      extractFromVoice: async (content: string) => {
         // voice mode: gemini live already replied via audio. we only need the
         // text NLP to extract dimensions and decide if the calculation is ready.
         // we DO NOT add user/assistant messages here (the live hook already added
@@ -333,26 +309,15 @@ export const useChatStore = create<ChatState>()(
 
           if (!parsed.success || !parsed.data) return;
 
-          set((state) => {
-            const messages = localId
-              ? state.messages.map((msg) =>
-                  msg.id === localId
-                    ? { ...msg, id: parsed.data!.messageId, timestamp: new Date().toISOString() }
-                    : msg
-                )
-              : state.messages;
-
-            return {
-              messages,
-              conversationId: parsed.data?.conversationId ?? state.conversationId,
-              extractedData:
-                (parsed.data?.extractedData as Record<string, unknown>) ??
-                state.extractedData,
-              region: parsed.data?.detectedRegion ?? state.region,
-              standardsApplied: parsed.data?.standardsApplied ?? state.standardsApplied,
-              warnings: parsed.data?.warnings ?? state.warnings,
-            };
-          });
+          set((state) => ({
+            conversationId: parsed.data?.conversationId ?? state.conversationId,
+            extractedData:
+              (parsed.data?.extractedData as Record<string, unknown>) ??
+              state.extractedData,
+            region: parsed.data?.detectedRegion ?? state.region,
+            standardsApplied: parsed.data?.standardsApplied ?? state.standardsApplied,
+            warnings: parsed.data?.warnings ?? state.warnings,
+          }));
 
           if (parsed.data.isReadyForCalculation) {
             await get().performCalculation();
@@ -375,7 +340,6 @@ export const useChatStore = create<ChatState>()(
           warnings: [],
           error: null,
           isLoading: false,
-          isCalculating: false,
         });
       },
 
@@ -451,7 +415,6 @@ export const useChatStore = create<ChatState>()(
           warnings: [],
           error: null,
           isLoading: false,
-          isCalculating: false,
         });
       },
     }),

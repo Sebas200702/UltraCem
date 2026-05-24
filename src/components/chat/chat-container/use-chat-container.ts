@@ -90,14 +90,11 @@ export function useChatContainer() {
       if (!content || content === lastLiveTranscriptRef.current) return;
 
       lastLiveTranscriptRef.current = content;
-      setHasStarted(true);
-
-      const localId = crypto.randomUUID();
       useChatStore.setState((state) => ({
         messages: [
           ...state.messages,
           {
-            id: localId,
+            id: crypto.randomUUID(),
             role: 'user' as const,
             content,
             timestamp: new Date().toISOString(),
@@ -108,8 +105,7 @@ export function useChatContainer() {
       // also pipe the transcript through the text NLP so dimensions get extracted
       // and the calculation fires when everything is in. the voice keeps the
       // natural conversation; this path is just for structured data.
-      // pass localId so the store can reconcile DB ids with local ids.
-      void useChatStore.getState().extractFromVoice(content, localId);
+      void useChatStore.getState().extractFromVoice(content);
     },
     [],
   );
@@ -141,10 +137,10 @@ export function useChatContainer() {
           }));
         }
 
-        // NOTE: performCalculation is NOT called here.
-        // The calculation will be triggered by extractFromVoice after the
-        // transcript is processed through the NLP pipeline (handleLiveTranscript -> extractFromVoice).
-        // Calling performCalculation here as well would create a race condition.
+        // Trigger calculation if ready
+        if (liveResponse.isReadyForCalculation) {
+          useChatStore.getState().performCalculation();
+        }
       } else if (text) {
         // Fallback: just add the raw text as assistant message
         useChatStore.setState((state) => ({
@@ -154,20 +150,6 @@ export function useChatContainer() {
               id: crypto.randomUUID(),
               role: 'assistant' as const,
               content: text,
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        }));
-      } else {
-        // No text transcript available — add a placeholder so the conversation
-        // still shows that the assistant responded (the user heard the audio).
-        useChatStore.setState((state) => ({
-          messages: [
-            ...state.messages,
-            {
-              id: crypto.randomUUID(),
-              role: 'assistant' as const,
-              content: '',
               timestamp: new Date().toISOString(),
             },
           ],
@@ -188,12 +170,6 @@ export function useChatContainer() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading, currentRecommendation]);
-
-  useEffect(() => {
-    if (live.state === 'disconnected') {
-      lastLiveTranscriptRef.current = '';
-    }
-  }, [live.state]);
 
   const handleStart = () => {
     setHasStarted(true);
@@ -235,7 +211,6 @@ export function useChatContainer() {
     live.disconnect();
     lastLiveTranscriptRef.current = '';
     useChatStore.setState({
-      calculationMeta: null, // Explicitly reset calculationMeta
       messages: [
         {
           id: crypto.randomUUID(),
@@ -251,14 +226,12 @@ export function useChatContainer() {
     live.toggleConnection();
   }, [live]);
 
-  const displayMessages = messages
-    .filter((msg) => !msg.isCalculation)
-    .map((msg) => ({
-      id: msg.id,
-      role: msg.role,
-      content: msg.content,
-      timestamp: msg.timestamp,
-    }));
+  const displayMessages = messages.map((msg) => ({
+    id: msg.id,
+    role: msg.role,
+    content: msg.content,
+    timestamp: msg.timestamp,
+  }));
 
   const calculationData = adaptRecommendation(
     currentCalculation,

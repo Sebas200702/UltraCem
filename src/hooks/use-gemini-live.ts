@@ -316,7 +316,9 @@ export function useGeminiLive({
             setOutputTranscript('');
             setInputTranscript('');
 
-            onResponse?.(text, parsed);
+            if (text) {
+              onResponse?.(text, parsed);
+            }
             // do NOT restart the session — Gemini Live keeps the connection open.
             // the mic is already running; just let VAD pick up the next user turn.
             break;

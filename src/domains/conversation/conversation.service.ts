@@ -378,16 +378,10 @@ Responde de forma natural y amigable. SOLO texto, nunca JSON.`;
         warnings?: SafetyWarning[];
       };
 
-      // Merge dimensions properly - only overwrite with defined values from parsed response
-const prevDimensions = context.extractedData.dimensions ?? {};
-      const newDimensions = (parsed.extractedData?.dimensions ?? {}) as Record<string, unknown>;
-      const mergedDimensions: Record<string, unknown> = { ...prevDimensions };
-      for (const key of Object.keys(newDimensions)) {
-        const value = newDimensions[key];
-        if (value !== undefined) {
-          mergedDimensions[key] = value;
-        }
-      }
+      const mergedDimensions = {
+        ...(context.extractedData.dimensions ?? {}),
+        ...(parsed.extractedData?.dimensions ?? {}),
+      };
 
       const mergedData = {
         ...context.extractedData,
@@ -403,7 +397,7 @@ const prevDimensions = context.extractedData.dimensions ?? {};
         Object.keys(mergedData).length > 0 ? (mergedData as Partial<CalculationInput>) : undefined;
 
       const readyFlag =
-        hasRequiredDimensions(finalExtractedData);
+        Boolean(parsed.isReadyForCalculation) || hasRequiredDimensions(finalExtractedData);
 
       return {
         reply: typeof parsed.reply === 'string' ? parsed.reply : text,

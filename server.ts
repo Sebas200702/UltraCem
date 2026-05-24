@@ -241,7 +241,7 @@ app.prepare().then(async () => {
               },
               config: {
                 systemInstruction: LIVE_SYSTEM_PROMPT,
-                responseModalities: [Modality.AUDIO, Modality.TEXT],
+                responseModalities: [Modality.AUDIO],
                 mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
                 speechConfig: {
                   voiceConfig: {
