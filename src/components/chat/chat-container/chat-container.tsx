@@ -208,18 +208,18 @@ export function ChatContainer() {
                     <TypingIndicator />
                   </div>
                 )}
+                {calculationData && (
+                  <CalculationResult
+                    data={calculationData}
+                    onNewCalculation={handleNewCalculation}
+                  />
+                )}
                 {error && (
                   <div className="flex justify-center">
                     <div className="max-w-[80%] rounded-full bg-red-50 px-4 py-2 text-center text-caption text-red-700 animate-fade-in-up">
                       {error}
                     </div>
                   </div>
-                )}
-                {calculationData && (
-                  <CalculationResult
-                    data={calculationData}
-                    onNewCalculation={handleNewCalculation}
-                  />
                 )}
                 <div className="h-4" />
               </div>
