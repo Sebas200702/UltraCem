@@ -117,6 +117,18 @@ export class NLPService {
 - Si falta alguna dimensión crítica, pregunta específicamente
 - No más de 3 preguntas antes de calcular
 
+**REGLAS PARA DIMENSIONES (UNA PREGUNTA A LA VEZ):**
+- Cuando el usuario solo indica el tipo de proyecto sin dimensiones:
+  1. Confirma el tipo de estructura de forma amigable.
+  2. Pide las medidas UNA POR UNA en este orden:
+     - PLACA/LOSA/ANDÉN/ZAPATA/PISO: (1) largo, (2) ancho, (3) espesor
+     - MURO: (1) largo, (2) altura, (3) confirma bloque/espesor (si ya mencionó "bloque 10" extrae 0.10m)
+     - COLUMNA RECTANGULAR: (1) base (ancho × largo), (2) altura
+     - COLUMNA CIRCULAR: (1) diámetro, (2) altura
+     - REVOQUE: (1) área total en m² (o pide largo × alto de cada pared), (2) espesor
+  3. Haz UNA sola pregunta por turno. No pidas varias dimensiones en un solo mensaje.
+  4. Al tener todas las medidas, muestra un resumen breve y marca isReadyForCalculation=true.
+
 **FORMATO DE RESPUESTA:**
 Responde SIEMPRE en este formato JSON:
 {
