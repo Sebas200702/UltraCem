@@ -84,13 +84,16 @@ export const useChatStore = create<ChatState>()(
         }));
 
         try {
+          const { conversationId } = get();
+          const body: Record<string, unknown> = { message: content };
+          if (conversationId) {
+            body.conversationId = conversationId;
+          }
+
           const response = await fetch('/api/chat/send', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              conversationId: get().conversationId,
-              message: content,
-            }),
+            body: JSON.stringify(body),
           });
 
           if (!response.ok) {
