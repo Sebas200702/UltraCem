@@ -1,19 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { CalculationData } from "./ChatContainer";
-import {
-  CheckCircle,
-  TreePine,
-  Wallet,
-  FileText,
-  RotateCcw,
-  ArrowRight,
-  MessageCircle,
-  Copy,
-  Share2,
-  Check,
-} from "lucide-react";
+import { CheckCircle, TreePine, Wallet, FileText, RotateCcw, ArrowRight } from "lucide-react";
 
 interface CalculationResultProps {
   data: CalculationData;
@@ -28,63 +16,7 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function generateSummary(data: CalculationData): string {
-  const lines = [
-    `Resultado del cálculo de concreto`,
-    ``,
-    `Volumen total: ${data.volume_m3.toFixed(2)} m³`,
-    `Producto recomendado: ${data.product.name} (${data.product.sku})`,
-    `Cantidad de sacos: ${data.quantity_bags}`,
-    `Costo estimado: ${formatCurrency(data.estimated_cost_cop)}`,
-    `Ahorro: ${formatCurrency(data.savings_cop)}`,
-    `CO₂ evitado: ${Math.round(data.co2_saved_kg)} kg`,
-  ];
-  return lines.join("\n");
-}
-
 export function CalculationResult({ data, onNewCalculation }: CalculationResultProps) {
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 2000);
-    return () => clearTimeout(timer);
-  }, [copied]);
-
-  const summary = generateSummary(data);
-
-  const handleCopySummary = async () => {
-    try {
-      await navigator.clipboard.writeText(summary);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  };
-
-  const handleShare = async () => {
-    const shareData = {
-      title: "Cálculo de concreto - UltraCem",
-      text: summary,
-    };
-    if (typeof navigator !== "undefined" && "share" in navigator) {
-      try {
-        await (navigator as any).share(shareData);
-        return;
-      } catch {
-        // fallback to clipboard
-      }
-    }
-    await handleCopySummary();
-  };
-
-  const handleWhatsApp = () => {
-    const base = "https://wa.me/573164034858?text=";
-    const text = encodeURIComponent(
-      `¡Hola! Quiero cotizar el siguiente cálculo de concreto:\n\n${summary}\n\n¿Me pueden ayudar con más información?`
-    );
-    window.open(base + text, "_blank", "noopener,noreferrer");
-  };
   return (
     <div className="animate-fade-in-up">
       {/* Spec Sheet Container */}
@@ -261,72 +193,32 @@ export function CalculationResult({ data, onNewCalculation }: CalculationResultP
         </div>
 
         {/* CTAs */}
-        <div className="relative flex flex-col gap-2 border-t border-ultracem-gray-100 px-5 py-4">
-          {/* Action buttons row */}
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              onClick={handleWhatsApp}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90"
-              style={{ backgroundColor: "#25D366" }}
-            >
-              <MessageCircle className="h-4 w-4" />
-              <span>Enviar por WhatsApp</span>
-            </button>
-            <button
-              onClick={handleCopySummary}
-              className="btn-secondary flex flex-1 items-center justify-center gap-2"
-            >
-              {copied ? (
-                <Check className="h-4 w-4 text-ultracem-green" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-              <span>{copied ? "¡Copiado!" : "Copiar resumen"}</span>
-            </button>
-            <button
-              onClick={handleShare}
-              className="btn-outline flex flex-1 items-center justify-center gap-2"
-            >
-              <Share2 className="h-4 w-4" />
-              <span>Compartir</span>
-            </button>
-          </div>
-
-          {/* Main CTAs row */}
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <a
-              href={data.product.datasheet_url || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`btn-secondary flex-1 items-center gap-2 ${!data.product.datasheet_url ? "pointer-events-none opacity-50" : ""}`}
-            >
-              <FileText className="h-4 w-4" />
-              <span>Ver ficha técnica</span>
-            </a>
-            <a
-              href="https://b2b.ultracem.co/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary flex-1 items-center gap-2"
-            >
-              <span>Cotizar ahora</span>
-              <ArrowRight className="h-4 w-4" />
-            </a>
-            <button
-              onClick={onNewCalculation}
-              className="btn-outline flex-1 items-center gap-2"
-            >
-              <RotateCcw className="h-4 w-4" />
-              <span>Nuevo cálculo</span>
-            </button>
-          </div>
-
-          {/* Toast */}
-          {copied && (
-            <div className="absolute -top-10 left-1/2 z-10 -translate-x-1/2 transform rounded-lg bg-ultracem-gray-900 px-4 py-2 text-xs font-medium text-white shadow-lg animate-fade-in-up">
-              ¡Copiado al portapapeles!
-            </div>
-          )}
+        <div className="relative flex flex-col gap-2 border-t border-ultracem-gray-100 px-5 py-4 sm:flex-row">
+          <a
+            href={data.product.datasheet_url || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`btn-secondary flex-1 items-center gap-2 ${!data.product.datasheet_url ? 'pointer-events-none opacity-50' : ''}`}
+          >
+            <FileText className="h-4 w-4" />
+            <span>Ver ficha técnica</span>
+          </a>
+          <a
+            href="https://b2b.ultracem.co/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-primary flex-1 items-center gap-2"
+          >
+            <span>Cotizar ahora</span>
+            <ArrowRight className="h-4 w-4" />
+          </a>
+          <button
+            onClick={onNewCalculation}
+            className="btn-outline flex-1 items-center gap-2"
+          >
+            <RotateCcw className="h-4 w-4" />
+            <span>Nuevo cálculo</span>
+          </button>
         </div>
       </div>
     </div>
