@@ -232,7 +232,7 @@ export function useChatContainer() {
     live.disconnect();
     lastLiveTranscriptRef.current = '';
     useChatStore.setState({
-      calculationData: null, // Explicitly reset calculationData
+      calculationMeta: null, // Explicitly reset calculationMeta
       messages: [
         {
           id: crypto.randomUUID(),
