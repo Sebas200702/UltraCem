@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { MaterialCalculator } from '@/domains/calculation/calculator.service';
 import { recommend } from '@/domains/recommendation/product-matcher.service';
-import type { Product, ProductCategory, TechnicalSpecs } from '@/types/database.types';
+import { normalizeDimensions } from '@/lib/dimension-normalize';
+import type { Product, ProductCategory, StructureType, TechnicalSpecs } from '@/types/database.types';
 
 const directCalculateSchema = z.object({
   structureType: z.enum(['slab', 'wall', 'column', 'plaster']),
@@ -19,9 +20,19 @@ const directCalculateSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const parsedBody = directCalculateSchema.safeParse(
-    await request.json().catch(() => null)
-  );
+  const rawBody = await request.json().catch(() => null);
+  const normalizedBody =
+    rawBody && typeof rawBody === 'object'
+      ? {
+          ...rawBody,
+          dimensions: normalizeDimensions(
+            rawBody.structureType as StructureType | undefined,
+            rawBody.dimensions as Record<string, number | undefined> | undefined,
+          ),
+        }
+      : null;
+
+  const parsedBody = directCalculateSchema.safeParse(normalizedBody);
 
   if (!parsedBody.success) {
     return NextResponse.json(

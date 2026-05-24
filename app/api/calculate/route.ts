@@ -7,8 +7,9 @@ import { formatCalculationSummary } from '@/domains/conversation/nlp.service';
 import { calcRateLimiter, enforceRateLimit } from '@/lib/rate-limiter';
 import { getStandardsService, mapToApplied } from '@/domains/standards/standards.service';
 import { getRegionLabel, type ColombianRegion } from '@/domains/region/region.service';
+import { normalizeDimensions } from '@/lib/dimension-normalize';
 import type { CalculateResponse, Calculation, RecommendationOutput } from '@/types';
-import type { Product, ProductCategory, TechnicalSpecs } from '@/types/database.types';
+import type { Product, ProductCategory, StructureType, TechnicalSpecs } from '@/types/database.types';
 
 const calculateSchema = z.object({
   conversationId: z.string().uuid('El ID de conversación debe ser un UUID válido.'),
@@ -28,7 +29,19 @@ export async function POST(request: NextRequest) {
   const rateLimitResponse = await enforceRateLimit(request, calcRateLimiter);
   if (rateLimitResponse) return rateLimitResponse;
 
-  const parsedBody = calculateSchema.safeParse(await request.json().catch(() => null));
+  const rawBody = await request.json().catch(() => null);
+  const normalizedBody =
+    rawBody && typeof rawBody === 'object'
+      ? {
+          ...rawBody,
+          dimensions: normalizeDimensions(
+            rawBody.structureType as StructureType | undefined,
+            rawBody.dimensions as Record<string, number | undefined> | undefined,
+          ),
+        }
+      : null;
+
+  const parsedBody = calculateSchema.safeParse(normalizedBody);
 
   if (!parsedBody.success) {
     return NextResponse.json(

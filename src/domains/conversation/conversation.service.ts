@@ -8,6 +8,7 @@ import type {
   SafetyWarning,
 } from './conversation.types';
 import type { StructureType } from '@/types/database.types';
+import { normalizeDimensions } from '@/lib/dimension-normalize';
 import type { AppliedStandard } from '@/types';
 
 export function hasRequiredDimensions(
@@ -378,10 +379,15 @@ Responde de forma natural y amigable. SOLO texto, nunca JSON.`;
         warnings?: SafetyWarning[];
       };
 
-      const mergedDimensions = {
+      const mergedDimensionsRaw = {
         ...(context.extractedData.dimensions ?? {}),
         ...(parsed.extractedData?.dimensions ?? {}),
       };
+
+      const structureType =
+        parsed.extractedData?.structureType ?? context.extractedData.structureType;
+
+      const mergedDimensions = normalizeDimensions(structureType, mergedDimensionsRaw);
 
       const mergedData = {
         ...context.extractedData,

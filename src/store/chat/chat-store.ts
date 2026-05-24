@@ -1,6 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CalculateResponse, ChatSendResponse } from "@/types";
+import { normalizeDimensions } from "@/lib/dimension-normalize";
+import type { StructureType, Dimensions } from "@/types/database.types";
 import { type ChatState, type Message, type CalculationMeta } from '@/store/chat/chat-store-types';
 
 export const useChatStore = create<ChatState>()(
@@ -203,13 +205,18 @@ export const useChatStore = create<ChatState>()(
         set({ isLoading: true, error: null });
 
         try {
+          const dimensions = normalizeDimensions(
+            extractedData.structureType as StructureType,
+            extractedData.dimensions as Partial<Dimensions> | undefined,
+          );
+
           const response = await fetch("/api/calculate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               conversationId,
               structureType: extractedData.structureType,
-              dimensions: extractedData.dimensions ?? {},
+              dimensions,
               resistancePsi: extractedData.resistancePsi,
             }),
           });
