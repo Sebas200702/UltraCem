@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card, Eyebrow, Section } from "@/components/ui";
 import { tools } from '@/components/landing/tools-section/tools-section-data';
 import { type Tool } from '@/components/landing/tools-section/tools-section-types';
@@ -27,7 +28,7 @@ function ToolCard({ tag, title, description, href, cta, external }: Tool) {
     );
   }
 
-  return <a href={href}>{content}</a>;
+  return <Link href={href}>{content}</Link>;
 }
 
 export function ToolsSection() {

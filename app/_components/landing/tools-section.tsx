@@ -6,7 +6,7 @@ const tools = [
     title: "Calculadora de materiales",
     description:
       "Ajusta dimensiones con sliders y obtén dosificación detallada para cualquier tipo de estructura.",
-    href: "#calculadora",
+    href: "calculadora",
     cta: "Ir a la calculadora",
     external: false,
   },

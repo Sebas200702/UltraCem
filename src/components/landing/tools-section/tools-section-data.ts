@@ -6,7 +6,7 @@ export const tools: Tool[] = [
     title: "Calculadora de materiales",
     description:
       "Ajusta dimensiones y obten dosificacion detallada para distintos tipos de estructura.",
-    href: "#calculadora",
+    href: "/calculadora",
     cta: "Ir a la calculadora",
     external: false,
   },
