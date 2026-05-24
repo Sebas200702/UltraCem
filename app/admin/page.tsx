@@ -9,13 +9,13 @@ export default function AdminDashboard() {
           <p className="text-sm font-medium text-ultracem-gray-600">
             Total de productos activos
           </p>
-          <p className="mt-2 font-display text-5xl text-ultracem-blue">24</p>
+          <p className="mt-2 text-display font-bold text-ultracem-blue">24</p>
         </div>
         <div className="rounded-uc-card border border-ultracem-gray-100 bg-ultracem-surface p-6 shadow-uc-card">
           <p className="text-sm font-medium text-ultracem-gray-600">
             Total de cálculos realizados
           </p>
-          <p className="mt-2 font-display text-5xl text-ultracem-blue">
+          <p className="mt-2 text-display font-bold text-ultracem-blue">
             1,847
           </p>
         </div>
@@ -23,7 +23,7 @@ export default function AdminDashboard() {
           <p className="text-sm font-medium text-ultracem-gray-600">
             Productos con precios desactualizados
           </p>
-          <p className="mt-2 font-display text-5xl text-ultracem-yellow">3</p>
+          <p className="mt-2 text-display font-bold text-ultracem-yellow">3</p>
         </div>
       </div>
     </div>
