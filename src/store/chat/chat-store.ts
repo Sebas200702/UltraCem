@@ -133,7 +133,7 @@ export const useChatStore = create<ChatState>()(
           buffer += decoder.decode();
 
           const delimiterIndex = buffer.indexOf(METADATA_DELIMITER);
-          const finalText = delimiterIndex >= 0
+          let finalText = delimiterIndex >= 0
             ? buffer.slice(0, delimiterIndex)
             : buffer;
           const metadataJson = delimiterIndex >= 0
@@ -146,6 +146,15 @@ export const useChatStore = create<ChatState>()(
               metadata = JSON.parse(metadataJson) as ChatSendResponse;
             } catch {
               console.error('Failed to parse stream metadata');
+            }
+          } else if (finalText.trim().startsWith('{')) {
+            try {
+              const parsed = JSON.parse(finalText.trim()) as { reply?: string };
+              if (parsed.reply) {
+                finalText = parsed.reply;
+              }
+            } catch {
+              // not JSON, keep as-is
             }
           }
 
