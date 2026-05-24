@@ -1,7 +1,8 @@
 'use client';
 
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown } from 'lucide-react';
 import { UltraCemLogo } from '@/components/brand';
 import { CalculationResult } from '@/components/chat/calculation-result';
 import { InputBar } from '@/components/chat/input-bar';
@@ -46,6 +47,90 @@ function getStatusToken(state: string): StatusToken | null {
         badgeClass: 'bg-white/10 text-white/85',
       };
   }
+}
+
+function QuickActionsBar({ onAction }: { onAction: (prompt: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const visible = QUICK_ACTIONS.slice(0, 3);
+  const hidden = QUICK_ACTIONS.slice(3);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [open]);
+
+  const handleSelect = (prompt: string) => {
+    onAction(prompt);
+    setOpen(false);
+  };
+
+  return (
+    <div className="border-t border-ultracem-gray-100 bg-ultracem-surface px-4 py-3">
+      <p className="mb-2 text-caption font-semibold uppercase tracking-widest text-ultracem-gray-600">
+        Proyectos rápidos
+      </p>
+      <div className="flex items-center gap-2">
+        {visible.map((action) => (
+          <button
+            key={action.label}
+            type="button"
+            onClick={() => onAction(action.prompt)}
+            className="flex shrink-0 items-center gap-1.5 rounded-full border border-ultracem-gray-100 bg-ultracem-surface-subtle px-3 py-1.5 text-caption font-medium text-ultracem-gray-900 transition-colors hover:border-ultracem-yellow hover:bg-ultracem-yellow/10"
+          >
+            <action.icon className="h-3.5 w-3.5 text-ultracem-blue" />
+            {action.label}
+          </button>
+        ))}
+
+        {hidden.length > 0 && (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setOpen((prev) => !prev)}
+              className={`flex shrink-0 items-center gap-1 rounded-full border px-3 py-1.5 text-caption font-medium transition-colors ${
+                open
+                  ? 'border-ultracem-yellow bg-ultracem-yellow/10 text-ultracem-blue'
+                  : 'border-ultracem-gray-100 bg-ultracem-surface-subtle text-ultracem-gray-900 hover:border-ultracem-yellow hover:bg-ultracem-yellow/10'
+              }`}
+            >
+              <span>Más</span>
+              <ChevronDown
+                className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {open && (
+              <div className="absolute bottom-full left-0 mb-2 w-56 rounded-uc-card border border-ultracem-gray-100 bg-ultracem-surface py-2 shadow-uc-card">
+                {hidden.map((action) => (
+                  <button
+                    key={action.label}
+                    type="button"
+                    onClick={() => handleSelect(action.prompt)}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-caption font-medium text-ultracem-gray-900 transition-colors hover:bg-ultracem-yellow/10"
+                  >
+                    <action.icon className="h-4 w-4 shrink-0 text-ultracem-blue" />
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 export function ChatContainer() {
@@ -141,23 +226,7 @@ export function ChatContainer() {
             </div>
 
             {!calculationData && messages.length > 0 && (
-              <div className="border-t border-ultracem-gray-100 bg-ultracem-surface px-4 py-3">
-                <p className="mb-2 text-caption font-semibold uppercase tracking-widest text-ultracem-gray-600">
-                  Proyectos rápidos
-                </p>
-                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                  {QUICK_ACTIONS.map((action) => (
-                    <button
-                      key={action.label}
-                      onClick={() => handleQuickAction(action.prompt)}
-                      className="flex shrink-0 items-center gap-1.5 rounded-full border border-ultracem-gray-100 bg-ultracem-surface-subtle px-3 py-1.5 text-caption font-medium text-ultracem-gray-900 transition-colors hover:border-ultracem-yellow hover:bg-ultracem-yellow/10"
-                    >
-                      <action.icon className="h-3.5 w-3.5 text-ultracem-blue" />
-                      {action.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <QuickActionsBar onAction={handleQuickAction} />
             )}
 
             <InputBar
