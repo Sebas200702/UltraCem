@@ -230,7 +230,8 @@ export async function POST(request: NextRequest) {
             reply: '',
             intent: 'unknown' as const,
             isReadyForCalculation: false,
-            warnings: [],
+            warnings: [] as unknown as [],
+            extractedData: undefined,
           };
         });
 

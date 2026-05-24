@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import type { ColombianRegion } from '../region/region.service';
+import type { AppliedStandard } from '@/types';
+export type { AppliedStandard } from '@/types';
 
 export interface RetrievedStandard {
   id: string;
@@ -14,18 +16,6 @@ export interface RetrievedStandard {
   structureType: string | null;
   parameters: Record<string, unknown>;
   source: string;
-}
-
-export interface AppliedStandard {
-  code: string;
-  title: string;
-  implication: string;
-  /** Internal ficha at /normas/[code] */
-  sourceUrl: string;
-  /** Verified external URL to the issuing institution */
-  officialSource: string;
-  articleRef: string | null;
-  verbatim: boolean;
 }
 
 export function getStandardDetailUrl(code: string): string {

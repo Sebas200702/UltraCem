@@ -149,18 +149,3 @@ export interface SafetyWarning {
   standardRef?: string;
   severity: 'low' | 'medium' | 'high';
 }
-
-export interface RetrievedStandard {
-  id: string;
-  code: string;
-  title: string;
-  content: string;
-  implication: string | null;
-  articleRef: string | null;
-  verbatim: boolean;
-  category: string;
-  region: string | null;
-  structureType: string | null;
-  parameters: Record<string, unknown>;
-  source: string;
-}

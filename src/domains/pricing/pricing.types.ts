@@ -24,5 +24,3 @@ export interface PriceStaleness {
   daysOld: number;
   disclaimer: string;
 }
-
-export type PricingProduct = Product;

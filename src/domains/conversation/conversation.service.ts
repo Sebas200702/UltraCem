@@ -8,7 +8,7 @@ import type {
   SafetyWarning,
 } from './conversation.types';
 import type { StructureType } from '@/types/database.types';
-import type { AppliedStandard } from '@/domains/standards/standards.service';
+import type { AppliedStandard } from '@/types';
 
 export function hasRequiredDimensions(
   extracted: Partial<CalculationInput> | undefined,
@@ -431,8 +431,6 @@ const prevDimensions = context.extractedData.dimensions ?? {};
     return formatCalculationSummary(calculation, recommendation);
   }
 }
-
-export type { AppliedStandard } from '@/domains/standards/standards.service';
 
 export function formatCalculationSummary(
   calculation: Calculation,

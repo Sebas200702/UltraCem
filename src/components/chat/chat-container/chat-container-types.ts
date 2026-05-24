@@ -1,5 +1,6 @@
 import { type ComponentType } from "react";
 import type { ComparisonData } from "@/domains/recommendation/recommendation.types";
+import type { AppliedStandard } from "@/types";
 
 export interface Message {
   id: string;
@@ -8,15 +9,7 @@ export interface Message {
   timestamp: string;
 }
 
-export interface AppliedStandard {
-  code: string;
-  title: string;
-  implication: string;
-  sourceUrl: string;
-  officialSource: string;
-  articleRef?: string | null;
-  verbatim: boolean;
-}
+export type { AppliedStandard };
 
 export interface CalculationData {
   volume_m3: number;

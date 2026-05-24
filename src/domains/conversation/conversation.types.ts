@@ -3,9 +3,9 @@ import type {
   CalculationInput,
   Message,
   RecommendationOutput,
-  RetrievedStandard,
   SafetyWarning,
 } from "@/types/database.types";
+import type { RetrievedStandard } from "@/domains/standards/standards.service";
 
 export type {
   Calculation,

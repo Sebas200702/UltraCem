@@ -1,5 +1,5 @@
 import type { Product } from '@/types/database.types';
-import type { PriceChange, ProductInput } from '@/domains/pricing/pricing.types';
+import type { PriceChange, PriceStaleness, ProductInput } from '@/domains/pricing/pricing.types';
 
 const VALID_CATEGORIES = ['structural', 'plaster', 'specialty'] as const;
 
@@ -58,7 +58,7 @@ export function validateProductInput(input: Record<string, unknown>): {
 
 export function checkPriceStaleness(
   product: Product
-): { stale: boolean; daysOld: number; disclaimer: string } {
+): PriceStaleness {
   const updatedAt = new Date(product.updated_at);
   const now = new Date();
   const diffMs = now.getTime() - updatedAt.getTime();
