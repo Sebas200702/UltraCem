@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { recommend, scoreProduct, calculateCostAnalysis, generateJustification } from '../product-matcher.service';
+import {
+  recommend,
+  scoreProduct,
+  calculateCostAnalysis,
+  generateJustification,
+  buildComparisonData,
+} from '../product-matcher.service';
 import type { Product, RecommendationInput, StructureType, Materials } from '../../../types/database.types';
 
 const mockProducts: Product[] = [
@@ -54,11 +60,14 @@ const baseMaterials: Materials = {
   water_liters: 420,
 };
 
+const slabWasteFactor = 1.05;
+
 describe('recommend()', () => {
   it('recommends best product for slab structure', () => {
     const result = recommend(
       { structureType: 'slab', materials: baseMaterials, resistancePsi: 3000 },
-      mockProducts
+      mockProducts,
+      slabWasteFactor,
     );
 
     expect(result).not.toBeNull();
@@ -69,7 +78,8 @@ describe('recommend()', () => {
   it('prefers products matching the structure type category', () => {
     const result = recommend(
       { structureType: 'plaster', materials: baseMaterials, resistancePsi: 3000 },
-      mockProducts
+      mockProducts,
+      slabWasteFactor,
     );
 
     expect(result).not.toBeNull();
@@ -79,7 +89,8 @@ describe('recommend()', () => {
   it('calculates cost analysis correctly', () => {
     const result = recommend(
       { structureType: 'slab', materials: baseMaterials, resistancePsi: 3000 },
-      mockProducts
+      mockProducts,
+      slabWasteFactor,
     );
 
     expect(result).not.toBeNull();
@@ -92,7 +103,8 @@ describe('recommend()', () => {
   it('calculates co2 savings correctly', () => {
     const result = recommend(
       { structureType: 'slab', materials: baseMaterials, resistancePsi: 3000 },
-      mockProducts
+      mockProducts,
+      slabWasteFactor,
     );
 
     const expectedDiff = 0.950 - 0.850;
@@ -104,7 +116,8 @@ describe('recommend()', () => {
   it('generates technical justification for slab', () => {
     const result = recommend(
       { structureType: 'slab', materials: baseMaterials, resistancePsi: 3000 },
-      mockProducts
+      mockProducts,
+      slabWasteFactor,
     );
 
     expect(result).not.toBeNull();
@@ -115,7 +128,8 @@ describe('recommend()', () => {
   it('generates technical justification for plaster', () => {
     const result = recommend(
       { structureType: 'plaster', materials: baseMaterials, resistancePsi: 1500 },
-      mockProducts
+      mockProducts,
+      1.15,
     );
 
     expect(result).not.toBeNull();
@@ -126,7 +140,8 @@ describe('recommend()', () => {
   it('generates environmental justification when co2_saved > 0', () => {
     const result = recommend(
       { structureType: 'slab', materials: baseMaterials, resistancePsi: 3000 },
-      mockProducts
+      mockProducts,
+      slabWasteFactor,
     );
 
     expect(result).not.toBeNull();
@@ -138,10 +153,50 @@ describe('recommend()', () => {
   it('returns null when no products found', () => {
     const result = recommend(
       { structureType: 'slab', materials: baseMaterials, resistancePsi: 3000 },
-      []
+      [],
+      slabWasteFactor,
     );
 
     expect(result).toBeNull();
+  });
+
+  it('includes comparison data in the recommendation', () => {
+    const result = recommend(
+      { structureType: 'slab', materials: baseMaterials, resistancePsi: 3000 },
+      mockProducts,
+      slabWasteFactor,
+    );
+
+    expect(result).not.toBeNull();
+    expect(result!.comparison.ultracem.sacos).toBe(22);
+    expect(result!.comparison.generico.wasteFactor).toBeCloseTo(slabWasteFactor * 1.3, 5);
+    expect(result!.comparison.wasteFactorBase).toBe(slabWasteFactor);
+    expect(result!.comparison.ahorroPesos).toBeGreaterThan(0);
+  });
+});
+
+describe('buildComparisonData()', () => {
+  it('uses the most expensive comparable when available', () => {
+    const comparison = buildComparisonData(
+      mockProducts[0],
+      baseMaterials,
+      slabWasteFactor,
+      [32500, 22000],
+    );
+
+    expect(comparison.generico.precioSaco).toBe(32500);
+    expect(comparison.ultracem.costoBase).toBe(22 * 28500);
+  });
+
+  it('falls back to a 15% markup when no comparables are higher', () => {
+    const comparison = buildComparisonData(
+      mockProducts[0],
+      baseMaterials,
+      slabWasteFactor,
+      [22000],
+    );
+
+    expect(comparison.generico.precioSaco).toBe(Math.round(28500 * 1.15));
   });
 });
 

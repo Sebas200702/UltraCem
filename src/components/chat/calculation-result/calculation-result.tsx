@@ -10,6 +10,7 @@ import {
   TreePine,
   Wallet,
 } from "lucide-react";
+import { ComparisonPanel } from "@/components/calculator/comparison-panel";
 import { type CalculationResultProps } from '@/components/chat/calculation-result/calculation-result-types';
 
 function formatCurrency(value: number) {
@@ -379,6 +380,8 @@ export function CalculationResult({
             </p>
           </div>
         </div>
+
+        {data.comparison && <ComparisonPanel data={data.comparison} />}
 
         <div className="hidden flex-col gap-2 border-t border-ultracem-gray-100 px-5 py-4 sm:flex sm:flex-row">
           <a

@@ -126,6 +126,7 @@ export const useChatStore = create<ChatState>()(
                   ? { ...msg, content: textToRender }
                   : msg
               ),
+              ...(textToRender.trim() ? { isLoading: false } : {}),
             }));
           }
 
@@ -263,6 +264,7 @@ export const useChatStore = create<ChatState>()(
               savings_cop: result.recommendation.savings_cop,
               co2_saved_kg: result.recommendation.co2_saved_kg,
               justification: result.recommendation.justification,
+              comparison: result.recommendation.comparison,
             },
             calculationMeta: meta,
             region: result.region ?? state.region,

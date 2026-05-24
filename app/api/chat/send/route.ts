@@ -7,6 +7,7 @@ import { chatRateLimiter, enforceRateLimit } from '@/lib/rate-limiter';
 import { detectRegion, type ColombianRegion } from '@/domains/region/region.service';
 import { getStandardsService, mapToApplied } from '@/domains/standards/standards.service';
 import { fastClassify } from '@/domains/agents/fast-classifier';
+import { tryFastExtract } from '@/domains/conversation/fast-extract';
 import type { ChatSendResponse, Message, MessageRole } from '@/types';
 
 const chatSendSchema = z.object({
@@ -202,24 +203,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, data });
     }
 
-    // Streaming response, optimized for low TTFB:
-    // - kick off extractData in parallel (don't await it).
-    // - start streaming the natural-language reply IMMEDIATELY using only the
-    //   message + history + accumulated context. Gemini reads the user message
-    //   itself, so the reply is still coherent without the freshly extracted data.
-    // - at the end of the stream, await extractData to build metadata, persist,
-    //   and let the client trigger the calculation if applicable.
-    const extractDataPromise: Promise<Awaited<ReturnType<NLPService['extractData']>>> =
-      nlpService.extractData(message, context).catch((extractErr) => {
-        console.error('Extract data error:', extractErr);
-        return {
-          reply: '',
-          intent: 'unknown' as const,
-          isReadyForCalculation: false,
-          warnings: [],
-        };
-      });
-
+    // Streaming: deliver the natural-language reply first, then extract structured
+    // data (fast local path or one Gemini call). Running both in parallel doubled
+    // API load and could truncate replies when thinking tokens ate the budget.
     const stream = new ReadableStream({
       async start(controller) {
         let fullReply = '';
@@ -237,8 +223,16 @@ export async function POST(request: NextRequest) {
           fullReply = FALLBACK_REPLY;
         }
 
-        // now wait for the structured extraction to build metadata + persist
-        const extracted = await extractDataPromise;
+        const fastExtracted = tryFastExtract(message, currentExtractedData, region);
+        const extracted = fastExtracted ?? await nlpService.extractData(message, context).catch((extractErr) => {
+          console.error('Extract data error:', extractErr);
+          return {
+            reply: '',
+            intent: 'unknown' as const,
+            isReadyForCalculation: false,
+            warnings: [],
+          };
+        });
 
         try {
           const assistantMessage = await prisma.message.create({

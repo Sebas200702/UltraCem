@@ -116,7 +116,8 @@ export async function POST(request: NextRequest) {
 
     const recommendation = recommend(
       { structureType, materials: result.materials, resistancePsi: effectivePsi },
-      mappedProducts
+      mappedProducts,
+      result.metadata.waste_factor,
     );
 
     if (!recommendation) {
@@ -173,6 +174,7 @@ export async function POST(request: NextRequest) {
       savings_cop: recommendation.savings_cop,
       co2_saved_kg: recommendation.co2_saved_kg,
       justification: recommendation.justification,
+      comparison: recommendation.comparison,
     };
 
     const regionLabel = getRegionLabel(region);

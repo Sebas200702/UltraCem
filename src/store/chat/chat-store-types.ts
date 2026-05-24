@@ -1,3 +1,5 @@
+import type { ComparisonData } from "@/domains/recommendation/recommendation.types";
+
 export interface Message {
   id: string;
   role: "user" | "assistant" | "system";
@@ -58,6 +60,7 @@ export interface ChatState {
       economic_reason: string;
       environmental_reason?: string;
     };
+    comparison?: ComparisonData;
   } | null;
   calculationMeta: CalculationMeta | null;
   region: string | null;

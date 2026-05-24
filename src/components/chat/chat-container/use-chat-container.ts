@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store';
 import { useGeminiLive, parseLiveResponse } from '@/hooks/use-gemini-live';
+import type { ComparisonData } from '@/domains/recommendation/recommendation.types';
 import {
   type CalculationData,
   type AppliedStandard,
@@ -35,6 +36,7 @@ function adaptRecommendation(
       economic_reason: string;
       environmental_reason?: string;
     };
+    comparison?: ComparisonData;
   } | null,
   meta?: {
     formulaUsed?: string;
@@ -62,6 +64,7 @@ function adaptRecommendation(
     formulaUsed: meta?.formulaUsed,
     wasteFactor: meta?.wasteFactor,
     warnings: meta?.warnings,
+    comparison: rec.comparison,
   };
 }
 

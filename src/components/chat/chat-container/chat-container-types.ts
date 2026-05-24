@@ -1,4 +1,5 @@
 import { type ComponentType } from "react";
+import type { ComparisonData } from "@/domains/recommendation/recommendation.types";
 
 export interface Message {
   id: string;
@@ -48,6 +49,7 @@ export interface CalculationData {
   formulaUsed?: string;
   wasteFactor?: number;
   warnings?: Array<{ type: string; message: string; severity: string }>;
+  comparison?: ComparisonData;
 }
 
 export interface QuickAction {
