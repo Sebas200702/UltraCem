@@ -12,7 +12,7 @@ export function HeroSection() {
           </Eyebrow>
           <div className="mb-6 h-1 w-32 rounded-full bg-ultracem-yellow" />
           <h1 className="mb-5 max-w-[520px] text-display text-white md:text-[3.5rem]">
-            Calcula tus materiales en menos de 90 segundos
+            Calcula tus materiales
           </h1>
           <p className="mb-9 max-w-[500px] text-body leading-relaxed text-white/75">
             Cuentale a Vanesa que vas a construir. Ella calcula cuantos sacos de

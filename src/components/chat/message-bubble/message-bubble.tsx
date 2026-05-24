@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { Share2, Copy, Check } from "lucide-react";
 import { type MessageBubbleProps } from '@/components/chat/message-bubble/message-bubble-types';
 
 function formatTime(isoString: string) {
@@ -124,6 +126,7 @@ function renderMarkdown(content: string): React.ReactNode[] {
 export function MessageBubble({ message, index }: MessageBubbleProps) {
   const isUser = message.role === "user";
   const isSystem = message.role === "system";
+  const [copied, setCopied] = useState(false);
 
   if (isSystem) {
     return (
@@ -134,6 +137,31 @@ export function MessageBubble({ message, index }: MessageBubbleProps) {
       </div>
     );
   }
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: isUser ? "Mi mensaje - UltraCem" : "Mensaje de Vanesa - UltraCem",
+          text: message.content,
+        });
+      }
+    } catch {
+      // User cancelled or share failed silently
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(message.content);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch {
+      // Copy failed silently
+    }
+  };
 
   return (
     <div
@@ -180,6 +208,35 @@ export function MessageBubble({ message, index }: MessageBubbleProps) {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           )}
+
+          <button
+            onClick={handleShare}
+            className="ml-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-caption font-medium text-ultracem-gray-500 transition-colors hover:bg-ultracem-gray-100 hover:text-ultracem-gray-900"
+            title="Compartir mensaje"
+            aria-label="Compartir mensaje"
+          >
+            <Share2 className="h-3 w-3" />
+            <span>Compartir</span>
+          </button>
+
+          <button
+            onClick={handleCopy}
+            className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-caption font-medium text-ultracem-gray-500 transition-colors hover:bg-ultracem-gray-100 hover:text-ultracem-gray-900"
+            title={copied ? "Copiado" : "Copiar mensaje"}
+            aria-label={copied ? "Copiado al portapapeles" : "Copiar mensaje"}
+          >
+            {copied ? (
+              <>
+                <Check className="h-3 w-3" />
+                <span>Copiado</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-3 w-3" />
+                <span>Copiar</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

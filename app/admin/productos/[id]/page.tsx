@@ -9,6 +9,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
+
 import {
   PriceHistoryTable,
   type PriceHistoryEntry,

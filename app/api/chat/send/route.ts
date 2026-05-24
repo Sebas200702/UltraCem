@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { NLPService, hasRequiredDimensions, type ConversationContext } from '@/domains/conversation/nlp.service';
-import type { NLPResponse } from '@/domains/conversation/conversation.types';
 import { getGeminiApiKey } from '@/lib/gemini';
 import { prisma } from '@/lib/prisma';
 import { chatRateLimiter, enforceRateLimit } from '@/lib/rate-limiter';
@@ -11,9 +10,9 @@ import { fastClassify } from '@/domains/agents/fast-classifier';
 import type { ChatSendResponse, Message, MessageRole } from '@/types';
 
 const chatSendSchema = z.object({
-  conversationId: z.string().uuid().nullable().optional(),
+  conversationId: z.string().uuid('Debe ser un UUID válido').nullable().optional(),
   message: z.string().trim().min(1, 'Mensaje requerido'),
-  userId: z.string().uuid().optional(),
+  userId: z.string().uuid('Debe ser un UUID válido').optional(),
   stream: z.boolean().optional().default(false),
 });
 

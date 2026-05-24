@@ -35,7 +35,7 @@ export default async function AdminDashboard() {
           <p className="text-sm font-medium text-ultracem-gray-600">
             Total de productos activos
           </p>
-          <p className="mt-2 text-display text-ultracem-blue">
+          <p className="mt-2 text-display font-bold text-ultracem-blue">
             {formatNumber(stats.activeProductsCount)}
           </p>
         </div>
@@ -43,7 +43,7 @@ export default async function AdminDashboard() {
           <p className="text-sm font-medium text-ultracem-gray-600">
             Total de cálculos realizados
           </p>
-          <p className="mt-2 text-display text-ultracem-blue">
+          <p className="mt-2 text-display font-bold text-ultracem-blue">
             {formatNumber(stats.totalCalculationsCount)}
           </p>
         </div>
@@ -54,7 +54,7 @@ export default async function AdminDashboard() {
           <p className="text-sm font-medium text-ultracem-gray-600">
             Productos con precios desactualizados
           </p>
-          <p className="mt-2 text-display text-ultracem-yellow">
+          <p className="mt-2 text-display font-bold text-ultracem-yellow">
             {formatNumber(stats.staleProductsCount)}
           </p>
         </Link>

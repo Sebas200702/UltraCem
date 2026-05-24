@@ -128,6 +128,10 @@ class MaterialCalculator {
     const dosageKey = this.getDosageKey(type, resistancePsi);
     let cementKgPerM3 = this.DOSAGE_TABLE[dosageKey];
 
+    if (cementKgPerM3 === undefined) {
+      throw new ValidationError(`No se encontró dosificación para la clave: ${dosageKey}`);
+    }
+
     if (region) {
       const info = getRegionInfo(region);
       cementKgPerM3 = Math.round(cementKgPerM3 * info.dosageAdjustments.cementMultiplier);
