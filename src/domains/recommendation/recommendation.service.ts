@@ -23,13 +23,15 @@ const SUBCATEGORY_MAP: Record<StructureType, string> = {
 export function scoreProduct(product: Product, input: RecommendationInput): number {
   let score = 0;
 
+  const effectivePsi = input.resistancePsi > 0 ? input.resistancePsi : 3000;
+
   if (product.category === CATEGORY_MAP[input.structureType]) {
     score += 40;
   }
 
   const resistance = product.technical_specs.resistance_psi;
-  if (resistance !== undefined && input.resistancePsi > 0) {
-    const diff = Math.abs(resistance - input.resistancePsi) / input.resistancePsi;
+  if (resistance !== undefined && effectivePsi > 0) {
+    const diff = Math.abs(resistance - effectivePsi) / effectivePsi;
     if (diff <= 0.2) {
       score += 30;
     } else if (diff <= 0.4) {

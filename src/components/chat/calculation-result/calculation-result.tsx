@@ -414,7 +414,7 @@ export function CalculationResult({
         </div>
       </div>
 
-      <div className="sticky bottom-0 z-30 mt-3 grid grid-cols-3 gap-2 rounded-uc-card border border-ultracem-blue/15 bg-ultracem-surface/95 p-2 shadow-uc-modal backdrop-blur sm:hidden">
+      <div className="mt-3 grid grid-cols-3 gap-2 rounded-uc-card border border-ultracem-blue/15 bg-ultracem-surface/95 p-2 shadow-uc-modal sm:hidden">
         <a
           href={data.product.datasheet_url || "#"}
           target="_blank"

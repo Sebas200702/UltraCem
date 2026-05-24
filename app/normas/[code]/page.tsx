@@ -89,7 +89,7 @@ export default async function StandardDetailPage({
           </div>
 
           <div className="grid gap-5 px-6 py-6">
-            {!standard.verbatim && (
+            {!(standard as { verbatim?: boolean }).verbatim && (
               <div className="flex gap-3 rounded-uc-card border border-amber-200 bg-amber-50 p-4">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
                 <div>
@@ -127,13 +127,13 @@ export default async function StandardDetailPage({
               </div>
             )}
 
-            {standard.articleRef && (
+            {(standard as { articleRef?: string | null }).articleRef && (
               <div className="rounded-uc-card border border-ultracem-gray-100 bg-ultracem-surface p-4">
                 <p className="mb-2 text-caption font-bold uppercase tracking-wider text-ultracem-gray-600">
                   Dónde verificar en el documento oficial
                 </p>
                 <p className="text-body-sm leading-relaxed text-ultracem-gray-800">
-                  {standard.articleRef}
+                  {(standard as { articleRef?: string | null }).articleRef}
                 </p>
               </div>
             )}

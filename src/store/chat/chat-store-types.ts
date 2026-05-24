@@ -1,4 +1,5 @@
 import type { ComparisonData } from "@/domains/recommendation/recommendation.types";
+import type { AppliedStandard } from '@/types';
 
 export interface Message {
   id: string;
@@ -6,16 +7,6 @@ export interface Message {
   content: string;
   timestamp: string;
   isCalculation?: boolean;
-}
-
-export interface AppliedStandard {
-  code: string;
-  title: string;
-  implication: string;
-  sourceUrl: string;
-  officialSource: string;
-  articleRef?: string | null;
-  verbatim: boolean;
 }
 
 export interface CalculationMeta {
@@ -32,6 +23,7 @@ export interface ChatState {
   messages: Message[];
   extractedData: Record<string, unknown>;
   isLoading: boolean;
+  isCalculating: boolean;
   error: string | null;
   currentCalculation: {
     id: string;
@@ -49,6 +41,7 @@ export interface ChatState {
       name: string;
       sku: string;
       price_per_bag_cop: number;
+      product_url: string | null;
       datasheet_url: string | null;
     };
     quantity_bags: number;
@@ -68,7 +61,7 @@ export interface ChatState {
   warnings: Array<{ type: string; message: string; severity: string }>;
   sendMessage: (content: string) => Promise<void>;
   performCalculation: () => Promise<void>;
-  extractFromVoice: (content: string) => Promise<void>;
+  extractFromVoice: (content: string, localId?: string) => Promise<void>;
   startNewConversation: () => void;
   loadConversation: (id: string) => Promise<void>;
   resetChat: () => void;

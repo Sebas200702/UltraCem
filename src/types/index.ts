@@ -24,6 +24,9 @@ export interface ChatSendRequest {
   conversationId?: string;
   message: string;
   userId?: string;
+  stream?: boolean;
+  /** Voice-only: extract dimensions without persisting a hidden assistant message. */
+  voiceExtract?: boolean;
 }
 
 export interface AppliedStandard {
