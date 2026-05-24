@@ -8,9 +8,9 @@ import type { ChatSendResponse, Message, MessageRole } from '@/types';
 
 
 const chatSendSchema = z.object({
-  conversationId: z.uuid('Debe ser un UUID válido').nullable().optional(),
+  conversationId: z.string().uuid('Debe ser un UUID válido').nullable().optional(),
   message: z.string().trim().min(1, 'Mensaje requerido'),
-  userId: z.uuid('Debe ser un UUID válido').optional(),
+  userId: z.string().uuid('Debe ser un UUID válido').optional(),
 });
 
 function isRecord(value: unknown): value is Record<string, unknown> {

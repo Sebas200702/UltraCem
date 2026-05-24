@@ -188,7 +188,7 @@ ${userMessage}
         reply: typeof parsed.reply === 'string' ? parsed.reply : text,
         intent,
         extractedData: Object.keys(mergedData).length > 0 ? mergedData : undefined,
-        isReadyForCalculation: Boolean(parsed.isReadyForCalculation),
+        isReadyForCalculation: parsed.isReadyForCalculation === true,
       };
     } catch (error) {
       console.error('Error parsing Gemini response:', error);

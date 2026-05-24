@@ -90,6 +90,11 @@ class MaterialCalculator {
   private calculateMaterials(type: StructureType, volume_m3: number, resistancePsi?: number): Materials {
     const dosageKey = this.getDosageKey(type, resistancePsi);
     const cementKgPerM3 = this.DOSAGE_TABLE[dosageKey];
+
+    if (cementKgPerM3 === undefined) {
+      throw new ValidationError(`No se encontró dosificación para la clave: ${dosageKey}`);
+    }
+
     const totalCementKg = cementKgPerM3 * volume_m3;
     const cementBags50kg = Math.ceil(totalCementKg / 50);
     const isConcrete = type === 'slab' || type === 'column';

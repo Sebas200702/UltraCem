@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import { ProductForm, type ProductFormData } from "@/components/admin/ProductForm";
+import { ProductForm, type ProductFormData } from "@/components/admin/product-form";
 
 export default function NuevoProductoPage() {
   const router = useRouter();

@@ -9,11 +9,11 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { ProductForm, type ProductFormData } from "@/components/admin/ProductForm";
+import { ProductForm, type ProductFormData } from "@/components/admin/product-form";
 import {
   PriceHistoryTable,
   type PriceHistoryEntry,
-} from "@/components/admin/PriceHistoryTable";
+} from "@/components/admin/price-history-table";
 
 interface ProductDetail {
   id: string;
